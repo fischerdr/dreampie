@@ -13,7 +13,5 @@ ignore =
     E501,
     # line break before binary operator
     W503,
-    # First line should be in imperative mood; try rephrasing
-    D401,
-    # One-line docstring should fit on one line with quotes
-    D200,
+    # import not at top of file
+    E402

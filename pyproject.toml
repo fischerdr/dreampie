@@ -1,0 +1,90 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dreampie"
+version = "1.4.0"
+description = "DreamPie - The interactive Python shell you've always dreamed about!"
+authors = [
+    {name = "Noam Yorav-Raphael", email = "noamraph@gmail.com"}
+]
+maintainers = [
+    {name = "DreamPie Contributors"}
+]
+readme = "README.md"
+license = {text = "GPL v3+"}
+requires-python = ">=3.9"
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Environment :: X11 Applications :: GTK",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Software Development :: Interpreters",
+]
+dependencies = [
+    "PyGObject>=3.42.0",
+    "pycairo>=1.20.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "black>=23.0.0",
+    "isort>=5.10.0",
+    "flake8>=5.0.0",
+    "mypy>=0.950",
+]
+docs = [
+    "sphinx>=5.0.0",
+]
+cli = [
+    "click>=8.0.0",
+    "typer>=0.7.0",
+    "rich>=12.0.0",
+]
+
+[project.urls]
+Homepage = "https://www.dreampie.org/"
+Repository = "https://github.com/fischerdr/dreampie"
+Issues = "https://github.com/fischerdr/dreampie/issues"
+
+[project.scripts]
+dreampie = "dreampielib.gui:main"
+
+[tool.setuptools]
+packages = ["dreampielib", "dreampielib.common", "dreampielib.gui", "dreampielib.subprocess"]
+
+[tool.setuptools.package-data]
+dreampielib = [
+    "data/dreampie.glade",
+    "data/dreampie.png",
+    "data/subp_main.py",
+    "data/language-specs/def.lang",
+    "data/language-specs/language2.rng",
+    "data/language-specs/python.lang",
+]
+
+[tool.black]
+line-length = 88
+target-version = ["py39"]
+include = '\.pyi?$'
+
+[tool.isort]
+profile = "black"
+line_length = 88
+
+[tool.mypy]
+python_version = "3.9"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
+
+[tool.pytest]
+testpaths = ["tests"]
