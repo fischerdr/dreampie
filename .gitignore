@@ -1,11 +1,67 @@
+
+# Byte-compiled / optimized / DLL files
 *.pyc
 *.class
+
+# Distribution / packaging
 build
 debian/*
+
+# Project files
 .project
 .pydevproject
-dist
-MANIFEST
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+dist/
+downloads/
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+*.cover
+*.cache
+*.log
+*.out
+*.pytest_cache
+
+# Sphinx
+.sphinx
+.sphinxbuild
+
+# Virtual environment
+.venv
+.venv/*
+
+# IDE
+.idea
+
+# VSCode
+.vscode
+
+# Other
+*.swp
+*.swo
+*.swn
 setup.nsi
 dreampie-*-setup.exe
 gtk-2.0
@@ -14,3 +70,7 @@ dreampie-*-setup.exe.asc
 dreampielib/data/subp-py2
 dreampielib/data/subp-py3
 windist
+MANIFEST
+MANIFEST.in
+
+
