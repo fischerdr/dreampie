@@ -230,4 +230,4 @@ class HyperParser(object):
                 # We've found an operator or something.
                 break
 
-        return text[last_identifier_pos : self.index]
+        return text[last_identifier_pos: self.index]

@@ -20,8 +20,10 @@ all = ["Folding"]
 from .common import beep, get_text
 from .tags import COMMAND, FOLD_MESSAGE, FOLDED, OUTPUT
 
+
 # Maybe someday we'll want translations...
-_ = lambda s: s
+def _(s):
+    return s
 
 
 class Folding(object):

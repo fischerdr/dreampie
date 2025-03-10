@@ -80,7 +80,7 @@ def write_command(write, command):
             if not in_high:
                 if cur_high[1] == lineno:
                     if cur_high[2] > col:
-                        my_write(line[col : cur_high[2]], is_defs, COMMAND)
+                        my_write(line[col:cur_high[2]], is_defs, COMMAND)
                         col = cur_high[2]
                     in_high = True
                 else:
@@ -89,7 +89,7 @@ def write_command(write, command):
             else:
                 if cur_high[3] == lineno:
                     if cur_high[4] > col:
-                        my_write(line[col : cur_high[4]], is_defs, COMMAND, cur_high[0])
+                        my_write(line[col:cur_high[4]], is_defs, COMMAND, cur_high[0])
                         col = cur_high[4]
                     in_high = False
                     high_pos += 1

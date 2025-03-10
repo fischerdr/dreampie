@@ -23,6 +23,7 @@ from StringIO import StringIO
 
 from .common import get_text
 from .tags import OUTPUT
+from dreampie.py2to3 import basestring
 
 # This RE is used to remove chars that won't be displayed from the data string.
 remove_cr_re = re.compile(r"\n[^\n]*\r")
@@ -137,7 +138,7 @@ class Output(object):
 
         # Remove data up to \r.
         if cr_pos != -1:
-            data = data[cr_pos + 1 :]
+            data = data[cr_pos + 1:]
 
         if addbreaks:
             # We DO use \r characters as linebreaks after BREAK_LEN chars, which

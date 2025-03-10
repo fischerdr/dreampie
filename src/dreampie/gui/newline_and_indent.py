@@ -31,7 +31,10 @@ def newline_and_indent(sourceview, INDENT_WIDTH):
     sb = sourceview.get_buffer()
     sb.begin_user_action()
     insert_mark = sb.get_insert()
-    insert = lambda: sb.get_iter_at_mark(insert_mark)
+
+    def insert():
+        return sb.get_iter_at_mark(insert_mark)
+
     try:
         sb.delete_selection(True, True)
         line = get_text(sb, sb.get_iter_at_line(insert().get_line()), insert())

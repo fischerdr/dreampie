@@ -109,7 +109,7 @@ class Autoparen(object):
         text = get_text(sb, sb.get_start_iter(), sb.get_end_iter())
         index = sb.get_iter_at_mark(sb.get_insert()).get_offset()
 
-        line = text[text.rfind("\n", 0, index) + 1 : index].lstrip()
+        line = text[text.rfind("\n", 0, index) + 1: index].lstrip()
         # don't add parens in import and except statements
         if line.startswith(("import ", "from ", "except ")):
             return False

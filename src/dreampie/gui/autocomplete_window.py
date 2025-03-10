@@ -23,6 +23,8 @@ from gtk import gdk
 
 from .common import beep, get_text
 from .keyhandler import handle_keypress, make_keyhandler_decorator
+from dreampie.py2to3 import xrange
+from typing import List, Tuple
 
 N_ROWS = 10
 
@@ -358,7 +360,7 @@ class AutocompleteWindow(object):
         while i < len(first) and i < len(last) and first[i] == last[i]:
             i += 1
         if i > len(self.cur_prefix):
-            toadd = first[len(self.cur_prefix) : i]
+            toadd = first[len(self.cur_prefix): i]
             # This updates self.cur_prefix
             self.sourcebuffer.insert_at_cursor(toadd)
         return True
@@ -368,7 +370,7 @@ class AutocompleteWindow(object):
     def complete(self):
         sel_row = self.treeview.get_selection().get_selected_rows()[1][0][0]
         text = self.liststore[sel_row][0].decode("utf8")
-        insert = text[len(self.cur_prefix) :]
+        insert = text[len(self.cur_prefix):]
         self.hide()
         self.sourcebuffer.insert_at_cursor(insert)
         self.on_complete()
@@ -418,33 +420,33 @@ class AutocompleteWindow(object):
             self.show(public, private, is_case_insen, start_len)
 
 
-def find_prefix_range(L, prefix):
+def find_prefix_range(L: List[str], prefix: str) -> Tuple[int, int]:
     # Find the range in the list L which begins with prefix, using binary
     # search.
 
     # start.
-    l = 0
+    listIndex = 0
     r = len(L)
-    while r > l:
-        m = (l + r) // 2
+    while r > listIndex:
+        m = (listIndex + r) // 2
         if L[m] == prefix:
-            l = r = m
+            listIndex = r = m
         elif L[m] < prefix:
-            l = m + 1
+            listIndex = m + 1
         else:
             r = m
-    start = l
+    start = listIndex
 
     # end
-    l = 0
+    listIndex = 0
     r = len(L)
-    while r > l:
-        m = (l + r) // 2
+    while r > listIndex:
+        m = (listIndex + r) // 2
         if L[m][: len(prefix)] > prefix:
             r = m
         else:
-            l = m + 1
-    end = l
+            listIndex = m + 1
+    end = listIndex
 
     return start, end
 

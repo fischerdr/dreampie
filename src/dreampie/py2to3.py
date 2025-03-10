@@ -28,19 +28,38 @@ import sys
 # Determine Python version
 py3k = sys.version_info[0] == 3
 
-# For Python 3 compatibility
+#------------------------------------------------------------------------------
+# String Types
+#------------------------------------------------------------------------------
 if py3k:
-    # String types
     unicode = str
     basestring = str
+else:
+    # These are already defined in Python 2
+    pass
 
-    # Numeric types
+#------------------------------------------------------------------------------
+# Numeric Types
+#------------------------------------------------------------------------------
+if py3k:
     long = int
+else:
+    # long is already defined in Python 2
+    pass
 
-    # Iterators
+#------------------------------------------------------------------------------
+# Iterators
+#------------------------------------------------------------------------------
+if py3k:
     xrange = range
+else:
+    # xrange is already defined in Python 2
+    pass
 
-    # Dict methods
+#------------------------------------------------------------------------------
+# Dictionary Methods
+#------------------------------------------------------------------------------
+if py3k:
     def iteritems(d):
         return d.items()
 
@@ -49,11 +68,7 @@ if py3k:
 
     def itervalues(d):
         return d.values()
-
-    # Input function
-    raw_input = input
 else:
-    # Dict methods for Python 2
     def iteritems(d):
         return d.iteritems()
 
@@ -63,13 +78,109 @@ else:
     def itervalues(d):
         return d.itervalues()
 
-    # Keep raw_input as is
-    raw_input = raw_input
+#------------------------------------------------------------------------------
+# Input Functions
+#------------------------------------------------------------------------------
+if py3k:
+    raw_input = input
+else:
+    # raw_input is already defined in Python 2
+    pass
 
+#------------------------------------------------------------------------------
+# Character Functions
+#------------------------------------------------------------------------------
+if py3k:
+    unichr = chr
+else:
+    # unichr is already defined in Python 2
+    pass
 
-# Common compatibility functions
+#------------------------------------------------------------------------------
+# Comparison Functions
+#------------------------------------------------------------------------------
+if py3k:
+    def cmp(a, b):
+        """
+        Implementation of cmp() for Python 3.
+        
+        Compare the two objects a and b and return an integer according to the outcome:
+        - Return a negative integer if a < b
+        - Return zero if a == b
+        - Return a positive integer if a > b
+        """
+        return (a > b) - (a < b)
+else:
+    # cmp is already defined in Python 2
+    pass
+
+#------------------------------------------------------------------------------
+# GTK Compatibility
+#------------------------------------------------------------------------------
+# Define GTK compatibility variables
+gtk = None
+gobject = None
+gtksourceview2 = None
+pango = None
+gdk = None
+glade = None
+
+try:
+    # Try importing the old-style GTK modules
+    import gobject
+    import gtk
+    import gtksourceview2
+    import pango
+    import gdk
+    import glade
+except ImportError:
+    # If old-style imports fail, use the new GI repository
+    import gi
+    
+    # Try different GTK source versions
+    gtksource_version = None
+    for version in ['4.0', '3.0', '2.0']:
+        try:
+            gi.require_version('GtkSource', version)
+            gtksource_version = version
+            break
+        except (ValueError, ImportError):
+            continue
+    
+    if gtksource_version is None:
+        raise ImportError("Could not find any compatible GtkSource version")
+    
+    gi.require_version('Gtk', '3.0')
+    from gi.repository import Gtk as gtk
+    from gi.repository import GObject as gobject
+    from gi.repository import GtkSource as gtksourceview2
+    from gi.repository import Pango as pango
+    from gi.repository import Gdk as gdk
+    try:
+        gi.require_version('Glade', '2.0')
+    except (ValueError, ImportError):
+        try:
+            gi.require_version('Glade', '3.0')
+        except (ValueError, ImportError):
+            pass
+    try:
+        from gi.repository import Glade as glade
+    except (ImportError, ValueError):
+        glade = None
+
+#------------------------------------------------------------------------------
+# Utility Functions
+#------------------------------------------------------------------------------
 def unicodify(s):
-    """Convert a string to unicode in both Python 2 and 3."""
+    """
+    Convert a string to unicode in both Python 2 and 3.
+    
+    Args:
+        s: The string to convert
+        
+    Returns:
+        A unicode string
+    """
     if py3k:
         if isinstance(s, bytes):
             return s.decode("utf-8")

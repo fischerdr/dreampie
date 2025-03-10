@@ -76,7 +76,7 @@ class Autocomplete(object):
         hp = HyperParser(text[:index], index, self.INDENT_WIDTH)
 
         if hp.is_in_code():
-            line = text[text.rfind("\n", 0, index) + 1 : index].lstrip()
+            line = text[text.rfind("\n", 0, index) + 1: index].lstrip()
             if line.startswith("import "):
                 res = self._complete_modules(line, is_auto)
             elif line.startswith("from "):
@@ -132,7 +132,7 @@ class Autocomplete(object):
             while i < len(first) and i < len(last) and first[i] == last[i]:
                 i += 1
             if i > len(comp_prefix):
-                sb.insert_at_cursor(combined[start][len(comp_prefix) : i])
+                sb.insert_at_cursor(combined[start][len(comp_prefix): i])
                 comp_prefix = first[:i]
             if end == start + 1:
                 # Only one matching completion - don't show the window
@@ -170,10 +170,10 @@ class Autocomplete(object):
         key_reprs = self.complete_dict_keys(comp_what)
         if key_reprs is None:
             return
-        if text[index : index + 1] != "]":
+        if text[index: index + 1] != "]":
             key_reprs = [x + "]" for x in key_reprs]
 
-        comp_prefix = text[opener + 1 : index]
+        comp_prefix = text[opener + 1: index]
         public = key_reprs
         private = []
         is_case_insen = False
@@ -317,7 +317,7 @@ class Autocomplete(object):
         pos = str_start - 1
         str_char = text[pos]
         assert str_char in ('"', "'")
-        if text[pos + 1 : pos + 3] == str_char + str_char:
+        if text[pos + 1: pos + 3] == str_char + str_char:
             # triple-quoted string - not for us
             return
         is_raw = pos > 0 and text[pos - 1].lower() == "r"

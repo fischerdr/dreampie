@@ -31,8 +31,10 @@ from .file_dialogs import open_dialog
 from .SimpleGladeApp import SimpleGladeApp
 from .tags import BG, COLOR, DEFAULT, FG, ISSET
 
+
 # Allow future translations
-_ = lambda s: s
+def _(s):
+    return s
 
 
 class ConfigDialog(SimpleGladeApp):
@@ -124,7 +126,9 @@ class ConfigDialog(SimpleGladeApp):
             if r != gtk.RESPONSE_OK:
                 return r
             expects_str = self.expects_str_entry.props.text.decode("utf8").strip()
-            is_ident = lambda s: re.match(r"[A-Za-z_][A-Za-z0-9_]*$", s)
+
+            def is_ident(s):
+                return re.match(r"[A-Za-z_][A-Za-z0-9_]*$", s)
             if not all(is_ident(s) for s in expects_str.split()):
                 warning = _(
                     "All names in the auto-quote list must be legal "
@@ -137,7 +141,7 @@ class ConfigDialog(SimpleGladeApp):
                     gtk.BUTTONS_CLOSE,
                     warning,
                 )
-                _response = msg.run()
+                msg.run()
                 msg.destroy()
                 self.expects_str_entry.grab_focus()
                 continue

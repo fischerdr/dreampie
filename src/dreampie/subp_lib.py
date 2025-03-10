@@ -34,17 +34,17 @@ except ImportError:
 else:
     py3_available = True
 
-dirs = ["dreampielib", "dreampielib/subprocess", "dreampielib/common"]
+dirs = ["dreampie", "dreampie/subprocess", "dreampie/common"]
 
 files = [
-    "dreampielib/__init__.py",
-    "dreampielib/subprocess/__init__.py",
-    "dreampielib/subprocess/find_modules.py",
-    "dreampielib/subprocess/split_to_singles.py",
-    "dreampielib/subprocess/trunc_traceback.py",
-    "dreampielib/common/__init__.py",
-    "dreampielib/common/objectstream.py",
-    "dreampielib/common/brine.py",
+    "dreampie/__init__.py",
+    "dreampie/subprocess/__init__.py",
+    "dreampie/subprocess/find_modules.py",
+    "dreampie/subprocess/split_to_singles.py",
+    "dreampie/subprocess/trunc_traceback.py",
+    "dreampie/common/__init__.py",
+    "dreampie/common/objectstream.py",
+    "dreampie/common/brine.py",
 ]
 
 lib_fns = {2: "subp-py2", 3: "subp-py3"}
@@ -72,7 +72,7 @@ class SimpleLogger(object):
         pass
 
     def info(self, s):
-        print >> sys.stderr, s
+        print(s, file=sys.stderr)
 
 
 simple_logger = SimpleLogger()

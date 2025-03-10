@@ -24,8 +24,11 @@ from HTMLParser import HTMLParser
 
 from .common import get_text
 from .file_dialogs import open_dialog, save_dialog
+from dreampie.py2to3 import unichr
 
-_ = lambda s: s
+
+def _(s):
+    return s
 
 
 class HistPersist(object):

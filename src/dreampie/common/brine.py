@@ -30,8 +30,26 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
-# You should have received a copy of the GNU General Public License
-# along with DreamPie.  If not, see <http://www.gnu.org/licenses/>.
+from struct import Struct
+
+# Import Python 2/3 compatibility helpers
+from dreampie.py2to3 import py3k, unicode, xrange, long, iteritems
+
+# IO handling based on Python version
+if not py3k:
+    from cStringIO import StringIO as BytesIO
+
+    def b(n):
+        return chr(n)
+
+    empty_bytes = ""
+else:
+    from io import BytesIO
+
+    def b(n):
+        return bytes([n])
+
+    empty_bytes = bytes()
 
 """
 brine - a simple, fast and secure object serializer,
@@ -41,27 +59,6 @@ unicode (In Py2) / str (In Py3), float, slice, complex, tuple(of simple types),
 list(of simple types), frozenset(of simple types)
 as well as the following singletons: None, NotImplemented, Ellipsis
 """
-import sys
-
-py3k = sys.version_info[0] == 3
-if not py3k:
-    from cStringIO import StringIO
-else:
-    from io import BytesIO
-from struct import Struct
-
-if not py3k:
-
-    def b(n):
-        return chr(n)
-
-    empty_bytes = ""
-else:
-
-    def b(n):
-        return bytes([n])
-
-    empty_bytes = bytes()
 
 # singletons
 TAG_NONE = b(0x00)
@@ -108,7 +105,7 @@ C16 = Struct("!dd")
 
 _dump_registry = {}
 _load_registry = {}
-IMM_INTS_LOADER = dict((v, k) for k, v in IMM_INTS.iteritems())
+IMM_INTS_LOADER = dict((v, k) for k, v in iteritems(IMM_INTS))
 
 
 def register(coll, key):
@@ -163,11 +160,13 @@ def _dump_int(obj, stream):
         stream.append(IMM_INTS[obj])
     else:
         obj = str(obj)
-        l = len(obj)
-        if l < 256:
-            stream.append(TAG_INT_L1 + I1.pack(l) + obj)
+        objlen = len(obj)
+        if py3k:
+            obj = obj.encode('utf-8')  # Convert string to bytes in Python 3
+        if objlen < 256:
+            stream.append(TAG_INT_L1 + I1.pack(objlen) + obj)
         else:
-            stream.append(TAG_INT_L4 + I4.pack(l) + obj)
+            stream.append(TAG_INT_L4 + I4.pack(objlen) + obj)
 
 
 # @register(_dump_registry, long)
@@ -179,21 +178,21 @@ def _dump_int(obj, stream):
 @register(_dump_registry, unicode)
 def _dump_str(obj, stream):
     obj = obj.encode("utf8")
-    l = len(obj)
-    if l == 0:
+    objlen = len(obj)
+    if objlen == 0:
         stream.append(TAG_EMPTY_STR)
-    elif l == 1:
+    elif objlen == 1:
         stream.append(TAG_STR1 + obj)
-    elif l == 2:
+    elif objlen == 2:
         stream.append(TAG_STR2 + obj)
-    elif l == 3:
+    elif objlen == 3:
         stream.append(TAG_STR3 + obj)
-    elif l == 4:
+    elif objlen == 4:
         stream.append(TAG_STR4 + obj)
-    elif l < 256:
-        stream.append(TAG_STR_L1 + I1.pack(l) + obj)
+    elif objlen < 256:
+        stream.append(TAG_STR_L1 + I1.pack(objlen) + obj)
     else:
-        stream.append(TAG_STR_L4 + I4.pack(l) + obj)
+        stream.append(TAG_STR_L4 + I4.pack(objlen) + obj)
 
 
 @register(_dump_registry, float)
@@ -214,36 +213,36 @@ def _dump_complex(obj, stream):
 
 @register(_dump_registry, tuple)
 def _dump_tuple(obj, stream):
-    l = len(obj)
-    if l == 0:
+    objlen = len(obj)
+    if objlen == 0:
         stream.append(TAG_EMPTY_TUPLE)
-    elif l == 1:
+    elif objlen == 1:
         stream.append(TAG_TUP1)
-    elif l == 2:
+    elif objlen == 2:
         stream.append(TAG_TUP2)
-    elif l == 3:
+    elif objlen == 3:
         stream.append(TAG_TUP3)
-    elif l == 4:
+    elif objlen == 4:
         stream.append(TAG_TUP4)
-    elif l < 256:
-        stream.append(TAG_TUP_L1 + I1.pack(l))
+    elif objlen < 256:
+        stream.append(TAG_TUP_L1 + I1.pack(objlen))
     else:
-        stream.append(TAG_TUP_L4 + I4.pack(l))
+        stream.append(TAG_TUP_L4 + I4.pack(objlen))
     for item in obj:
         _dump(item, stream)
 
 
 @register(_dump_registry, list)
 def _dump_list(obj, stream):
-    l = len(obj)
-    if l == 0:
+    objlen = len(obj)
+    if objlen == 0:
         stream.append(TAG_EMPTY_LIST)
-    elif l == 1:
+    elif objlen == 1:
         stream.append(TAG_LIST1)
-    elif l < 256:
-        stream.append(TAG_LIST_L1 + I1.pack(l))
+    elif objlen < 256:
+        stream.append(TAG_LIST_L1 + I1.pack(objlen))
     else:
-        stream.append(TAG_LIST_L4 + I4.pack(l))
+        stream.append(TAG_LIST_L4 + I4.pack(objlen))
     for item in obj:
         _dump(item, stream)
 
@@ -443,10 +442,7 @@ def dump(obj):
 
 def load(data):
     """loads the given byte-string representation to an object"""
-    if not py3k:
-        stream = StringIO(data)
-    else:
-        stream = BytesIO(data)
+    stream = BytesIO(data)
     return _load(stream)
 
 

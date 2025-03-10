@@ -299,7 +299,7 @@ class Parser(object):
             if ch == '"' or ch == "'":
                 # consume the string
                 quote = ch
-                if str[i - 1 : i + 2] == quote * 3:
+                if str[i - 1: i + 2] == quote * 3:
                     quote = quote * 3
                 firstlno = lno
                 w = len(quote) - 1
@@ -311,7 +311,7 @@ class Parser(object):
                     if ch == "x":
                         continue
 
-                    if str[i - 1 : i + w] == quote:
+                    if str[i - 1: i + w] == quote:
                         i = i + w
                         break
 
@@ -595,7 +595,7 @@ class Parser(object):
             while str[i] not in " \t\n":
                 i = i + 1
 
-        return len(str[self.stmt_start : i].expandtabs(self.tabwidth)) + 1
+        return len(str[self.stmt_start: i].expandtabs(self.tabwidth)) + 1
 
     # Return the leading whitespace on the initial line of the last
     # interesting stmt.

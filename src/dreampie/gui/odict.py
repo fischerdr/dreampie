@@ -30,6 +30,9 @@ __version__ = "0.2.2"
 
 __all__ = ["OrderedDict", "SequenceOrderedDict"]
 
+# Import Python 2 to 3 compatibility module
+from dreampie.py2to3 import cmp
+
 import sys
 
 INTP_VER = sys.version_info[:2]
@@ -130,7 +133,7 @@ class OrderedDict(dict):
             self._sequence = []
             self.update(init_val)
 
-    ### Special methods ###
+    # ### Special methods ###
 
     def __delitem__(self, key):
         """
@@ -492,7 +495,7 @@ class OrderedDict(dict):
 
         return self.__class__(deepcopy(self.items(), memo), self.strict)
 
-    ### Read-only methods ###
+    # ### Read-only methods ###
 
     def copy(self):
         """
@@ -595,7 +598,7 @@ class OrderedDict(dict):
 
         return make_iter()
 
-    ### Read-write methods ###
+    # ### Read-write methods ###
 
     def clear(self):
         """
@@ -824,7 +827,7 @@ class OrderedDict(dict):
             raise ValueError("Value list is not the same length as the " "OrderedDict.")
         self.update(zip(self, values))
 
-    ### Sequence Methods ###
+    # ### Sequence Methods ###
 
     def index(self, key):
         """
@@ -946,7 +949,7 @@ class Keys(object):
         else:
             raise ValueError("Cannot assign to keys")
 
-    ### following methods pinched from UserList and adapted ###
+    # ### following methods pinched from UserList and adapted ###
     def __repr__(self):
         return repr(self._main._sequence)
 
@@ -1006,7 +1009,7 @@ class Keys(object):
     def __radd__(self, other):
         return other + self._main._sequence
 
-    ## following methods not implemented for keys ##
+    # following methods not implemented for keys
     def __delitem__(self, i):
         raise TypeError("Can't delete items from keys")
 
@@ -1080,7 +1083,7 @@ class Items(object):
         else:
             del self._main[key]
 
-    ### following methods pinched from UserList and adapted ###
+    # ### following methods pinched from UserList and adapted ###
     def __repr__(self):
         return repr(self._main.items())
 
@@ -1171,8 +1174,7 @@ class Items(object):
     def __iadd__(self, other):
         self.extend(other)
 
-    ## following methods not implemented for items ##
-
+    # following methods not implemented for items
     def __imul__(self, n):
         raise TypeError("Can't multiply items in place")
 
@@ -1222,7 +1224,7 @@ class Values(object):
         else:
             self._main[self._main._sequence[index]] = value
 
-    ### following methods pinched from UserList and adapted ###
+    # following methods pinched from UserList and adapted
     def __repr__(self):
         return repr(self._main.values())
 
@@ -1288,7 +1290,7 @@ class Values(object):
     def __radd__(self, other):
         return other + self._main.values()
 
-    ## following methods not implemented for values ##
+    # following methods not implemented for values
     def __delitem__(self, i):
         raise TypeError("Can't delete items from values")
 
@@ -1524,7 +1526,7 @@ class SequenceOrderedDict(OrderedDict):
 
     def __setattr__(self, name, value):
         """Protect keys, items, and values."""
-        if not "_att_dict" in self.__dict__:
+        if "_att_dict" not in self.__dict__:
             object.__setattr__(self, name, value)
         else:
             try:

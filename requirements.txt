@@ -4,6 +4,16 @@ PyGObject>=3.42.0
 pycairo>=1.20.0
 ##pygtkcompat>=0.0.2
 
+# GTK dependencies
+# For GTK3 compatibility
+# Note: These packages need to be installed via dnf on Fedora:
+# - python3-gobject
+# - gtk3
+# - gtksourceview4
+# - python3-gtksourceview4
+# - glade3
+# - python3-glade
+
 # Testing and development tools
 pytest>=7.0.0
 black>=23.0.0

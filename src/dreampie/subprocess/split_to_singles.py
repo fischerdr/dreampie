@@ -43,10 +43,10 @@ class ReadLiner(object):
         next_offset = s.find("\n", line_offsets[-1])
         if next_offset == -1:
             self.finished = True
-            return s[line_offsets[-1] :]
+            return s[line_offsets[-1]:]
         else:
             line_offsets.append(next_offset + 1)
-            return s[line_offsets[-2] : line_offsets[-1]]
+            return s[line_offsets[-2]:line_offsets[-1]]
 
 
 class TeeIter(object):
@@ -133,9 +133,9 @@ def split_to_singles(source):
     r = []
     for i, line in enumerate(first_lines):
         if i != len(first_lines) - 1:
-            r.append(source[line_offsets[line] : line_offsets[first_lines[i + 1]]])
+            r.append(source[line_offsets[line]:line_offsets[first_lines[i + 1]]])
         else:
-            r.append(source[line_offsets[line] :])
+            r.append(source[line_offsets[line]:])
     return r
 
 
@@ -212,7 +212,7 @@ def f():
     """
 if 1:
     pass
-    
+
 @dec
 
 def f():

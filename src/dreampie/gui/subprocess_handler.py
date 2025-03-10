@@ -36,7 +36,10 @@ import gobject
 from ..common.objectstream import recv_object, send_object
 from .subprocess_interact import PIPE, Popen
 
-_ = lambda s: s
+
+def _(s):
+    return s
+
 
 START_TIMEOUT = 30  # seconds
 

@@ -75,14 +75,10 @@ def load_pygtk():
 if sys.platform == "win32":
     load_pygtk()
 
-import gobject
+# Import GTK modules from the compatibility layer
+from ..py2to3 import gobject, gtk, gtksourceview2, pango, gdk, glade, unicode
 
 gobject.threads_init()  # @UndefinedVariable
-import gtk
-import gtksourceview2
-import pango
-from gtk import gdk, glade
-
 from . import gtkexcepthook
 
 gtkexcepthook.install(gladefile)
@@ -143,8 +139,11 @@ AUTOCOMPLETE_WAIT = 400
 # idle jobs, and so not return a result.
 SUBP_WAIT_TIMEOUT_S = 0.5
 
+
 # Maybe someday we'll want translations...
-_ = lambda s: s
+def _(s):
+    return s
+
 
 # A decorator for managing sourceview key handlers
 sourceview_keyhandlers = {}
@@ -294,9 +293,9 @@ class DreamPie(SimpleGladeApp):
                 gtk.BUTTONS_CLOSE,
                 _("Couldn't start subprocess: %s") % e,
             )
-            _response = msg.run()
+            msg.run()
             msg.destroy()
-            print >> sys.stderr, e
+            print(e, file=sys.stderr)
             sys.exit(1)
 
         # Is the subprocess executing a command
@@ -912,7 +911,7 @@ class DreamPie(SimpleGladeApp):
                     gtk.BUTTONS_CLOSE,
                     warning,
                 )
-                _response = msg.run()
+                msg.run()
                 msg.destroy()
             else:
                 self.set_is_executing(True)
@@ -1101,7 +1100,7 @@ class DreamPie(SimpleGladeApp):
         for i, menuitem in enumerate(self.menuitem_recent):
             if i < len(recent_items):
                 it = recent_items[i]
-                fn = it.get_uri()[len("file://") :]
+                fn = it.get_uri()[len("file://"):]
                 menuitem.props.visible = True
                 menuitem.child.props.label = "_%d %s" % (i, fn)
                 self.recent_filenames[i] = fn
@@ -1230,12 +1229,12 @@ class DreamPie(SimpleGladeApp):
             # made the child of process number 1.
             pid = os.fork()
             if pid == 0:
-                _p = subprocess.Popen(argv, shell=True)
+                subprocess.Popen(argv, shell=True)
                 os._exit(0)
             else:
                 os.waitpid(pid, 0)
         else:
-            _p = subprocess.Popen(argv, shell=True)
+            subprocess.Popen(argv, shell=True)
 
     def on_double_click(self, event):
         """If we are on a folded section, unfold it and return True, to
@@ -1470,7 +1469,7 @@ class DreamPie(SimpleGladeApp):
             d.props.secondary_text = _("If you don't save, your history will be lost.")
             CANCEL, DISCARD, SAVE = range(3)
             discard_btn = d.add_button(_("Close _without saving"), DISCARD)
-            _cancel_btn = d.add_button(_("_Cancel"), CANCEL)
+            d.add_button(_("_Cancel"), CANCEL)
             save_btn = d.add_button(_("_Save"), SAVE)
             if not was_saved:
                 dontask_chk = gtk.CheckButton(
@@ -1633,7 +1632,7 @@ def main():
             )
             % os.path.abspath(sys.argv[0]),
         )
-        _response = msg.run()
+        msg.run()
         msg.destroy()
         sys.exit(1)
     else:
@@ -1645,5 +1644,5 @@ def main():
         hide_console_window()
 
     gtk.widget_set_default_direction(gtk.TEXT_DIR_LTR)
-    _dp = DreamPie(pyexec, opts.runfile)
+    DreamPie(pyexec, opts.runfile)
     gtk.main()
