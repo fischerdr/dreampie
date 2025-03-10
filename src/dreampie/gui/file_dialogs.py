@@ -22,7 +22,7 @@ Easy to use wrappers around GTK file dialogs.
 """
 
 import os
-from os.path import abspath, dirname, basename, exists
+from os.path import abspath, basename, dirname, exists
 
 import gtk
 

@@ -16,9 +16,10 @@
 
 all = ['update_check']
 
-import threading
-import httplib
 import json
+import threading
+
+import httplib
 
 try:
     from glib import idle_add
@@ -27,8 +28,9 @@ except ImportError:
     from gobject import idle_add
 
 from .. import release_timestamp
-from .git import get_commit_details
 from . import bug_report
+from .git import get_commit_details
+
 
 def log(s):
     pass

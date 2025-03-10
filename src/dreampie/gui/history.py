@@ -1,26 +1,26 @@
 # Copyright 2010 Noam Yorav-Raphael
 #
 # This file is part of DreamPie.
-# 
+#
 # DreamPie is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # DreamPie is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with DreamPie.  If not, see <http://www.gnu.org/licenses/>.
 
-__all__ = ['History']
+__all__ = ["History"]
 
 from zlib import adler32 as hash_cmd
 
-from .tags import COMMAND, PROMPT
 from .common import beep, get_text
+from .tags import COMMAND, PROMPT
 
 # In order to filter out repeating commands, we store the number of times a
 # command was encountered. To save memory, we only map the hash of a command
@@ -30,18 +30,20 @@ from .common import beep, get_text
 # To ease debugging, uncomment this:
 # hash_cmd = lambda s: s
 
+
 class History(object):
     """
     Manage moving between commands on the text view, and recalling commands
     in the source view.
     """
+
     def __init__(self, textview, sourceview, sv_changed, config):
         self.textview = textview
         self.textbuffer = textview.get_buffer()
         self.sourceview = sourceview
         self.sourcebuffer = sourceview.get_buffer()
         sv_changed.append(self._on_sv_changed)
-        self.recall_1_char_commands = config.get_bool('recall-1-char-commands')
+        self.recall_1_char_commands = config.get_bool("recall-1-char-commands")
 
         tb = self.textbuffer
 
@@ -52,14 +54,14 @@ class History(object):
         self.sb_changed = True
         # A handler_id when sb_changed is False.
         self.changed_handler_id = None
-        self.hist_mark = tb.create_mark('history', tb.get_end_iter(), False)
+        self.hist_mark = tb.create_mark("history", tb.get_end_iter(), False)
 
     def _on_sv_changed(self, new_sv):
         if self.changed_handler_id:
             self._on_sourcebuffer_changed(None)
         self.sourceview = new_sv
         self.sourcebuffer = new_sv.get_buffer()
-    
+
     def _track_change(self):
         """Set self.sb_changed to False, and add a handler which will set it
         to True on the next change."""
@@ -67,8 +69,9 @@ class History(object):
             return
         self.sb_changed = False
         self.changed_handler_id = self.sourcebuffer.connect(
-            'changed', self._on_sourcebuffer_changed)
-    
+            "changed", self._on_sourcebuffer_changed
+        )
+
     def _on_sourcebuffer_changed(self, _widget):
         self.sb_changed = True
         self.sourcebuffer.disconnect(self.changed_handler_id)
@@ -86,12 +89,13 @@ class History(object):
         if not it.begins_tag(command):
             it.backward_to_tag_toggle(command)
             assert it.begins_tag(command)
-        it_end = it.copy(); it_end.forward_to_tag_toggle(command)
+        it_end = it.copy()
+        it_end.forward_to_tag_toggle(command)
         if it.has_tag(prompt):
             it.forward_to_tag_toggle(prompt)
         if it.compare(it_end) >= 0:
             # nothing but prompt
-            return ''
+            return ""
         r = []
         while True:
             it2 = it.copy()
@@ -108,7 +112,7 @@ class History(object):
             it.forward_to_tag_toggle(prompt)
             if it.compare(it_end) >= 0:
                 break
-        return ''.join(r)
+        return "".join(r)
 
     def copy_to_sourceview(self):
         # Append the selected command(s) to the sourceview
@@ -126,9 +130,9 @@ class History(object):
         else:
             # Copy all commands which intersect with the selection
             it, end_it = sel
-            s = ''
+            s = ""
             if it.has_tag(command) or it.ends_tag(command):
-                s += self.iter_get_command(it).strip() + '\n'
+                s += self.iter_get_command(it).strip() + "\n"
                 if not it.ends_tag(command):
                     it.forward_to_tag_toggle(command)
             assert not it.has_tag(command)
@@ -136,15 +140,15 @@ class History(object):
                 it.forward_to_tag_toggle(command)
                 if it.compare(end_it) >= 0:
                     break
-                s += self.iter_get_command(it).strip() + '\n'
+                s += self.iter_get_command(it).strip() + "\n"
                 it.forward_to_tag_toggle(command)
             s = s.strip()
         if not s:
             beep()
             return True
         cur_text = get_text(sb, sb.get_start_iter(), sb.get_end_iter())
-        if cur_text and not cur_text.endswith('\n'):
-            s = '\n' + s
+        if cur_text and not cur_text.endswith("\n"):
+            s = "\n" + s
         sb.place_cursor(sb.get_end_iter())
         sb.insert_at_cursor(s)
         self.sourceview.scroll_mark_onscreen(sb.get_insert())
@@ -173,8 +177,7 @@ class History(object):
                     # Don't allow prefixes of more than one line
                     beep()
                     return
-                self.hist_prefix = get_text(sb, sb.get_start_iter(),
-                                            sb.get_end_iter())
+                self.hist_prefix = get_text(sb, sb.get_start_iter(), sb.get_end_iter())
                 self.hist_count = {}
                 self._track_change()
                 tb.move_mark(self.hist_mark, tb.get_end_iter())
@@ -190,10 +193,12 @@ class History(object):
                     beep()
                     break
                 first_line = self.iter_get_command(it, only_first_line=True).strip()
-                if (first_line
+                if (
+                    first_line
                     and first_line.startswith(self.hist_prefix)
-                    and (len(first_line) > 2 or self.recall_1_char_commands)):
-                    
+                    and (len(first_line) > 2 or self.recall_1_char_commands)
+                ):
+
                     cmd = self.iter_get_command(it).strip()
                     cmd_hash = hash_cmd(cmd)
                     tb.move_mark(self.hist_mark, it)
@@ -244,10 +249,12 @@ class History(object):
                     # meaningful.
                     break
                 first_line = self.iter_get_command(it, only_first_line=True).strip()
-                if (first_line
+                if (
+                    first_line
                     and first_line.startswith(self.hist_prefix)
-                    and (len(first_line) > 2 or self.recall_1_char_commands)):
-                    
+                    and (len(first_line) > 2 or self.recall_1_char_commands)
+                ):
+
                     cmd = self.iter_get_command(it).strip()
                     cmd_hash = hash_cmd(cmd)
                     tb.move_mark(self.hist_mark, it)
@@ -263,7 +270,6 @@ class History(object):
 
                 it.forward_to_tag_toggle(command)
                 it.forward_to_tag_toggle(command)
-                
 
         else:
             beep()

@@ -20,15 +20,17 @@
 # USA
 
 import os
-import sys
 import re
-
+import sys
 import tokenize
+
 import gtk
+
 _ = gtk; del _ # Make pydev quiet
-import gtk.glade
-import weakref
 import inspect
+import weakref
+
+import gtk.glade
 
 __version__ = "1.0"
 __author__ = 'Sandino "tigrux" Flores-Moreno'
@@ -47,8 +49,8 @@ def bindtextdomain(app_name, locale_dir=None):
         If omitted or None, then the current binding for app_name is used.
     """    
     try:
-        import locale
         import gettext
+        import locale
         locale.setlocale(locale.LC_ALL, "")
         gtk.glade.bindtextdomain(app_name, locale_dir)
         gettext.install(app_name, locale_dir, unicode=1)

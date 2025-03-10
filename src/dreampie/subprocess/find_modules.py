@@ -1,43 +1,45 @@
 # Copyright 2010 Noam Yorav-Raphael
 #
 # This file is part of DreamPie.
-# 
+#
 # DreamPie is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # DreamPie is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with DreamPie.  If not, see <http://www.gnu.org/licenses/>.
 
-import sys
-import os
-from os.path import join, isdir, isfile, exists
-import stat
 import imp
+import os
 import re
+import stat
+import sys
 import time
+from os.path import exists, isdir, isfile, join
 
-TIMEOUT = 1 # Stop after 1 second
+TIMEOUT = 1  # Stop after 1 second
 
 # Match any of the suffixes
 suffix_re = re.compile(
-    r'(?:%s)$' % '|'.join(re.escape(suffix[0]) for suffix in imp.get_suffixes()))
+    r"(?:%s)$" % "|".join(re.escape(suffix[0]) for suffix in imp.get_suffixes())
+)
 
 # A mapping from absolute names to (mtime, module_names) tuple.
 cache = {}
+
 
 def find_in_dir(dirname):
     """
     Yield all names of modules in the given dir.
     """
-    if dirname == '':
-        dirname = '.'
+    if dirname == "":
+        dirname = "."
     try:
         basenames = os.listdir(dirname)
     except OSError:
@@ -45,12 +47,13 @@ def find_in_dir(dirname):
     for basename in basenames:
         m = suffix_re.search(basename)
         if m:
-            yield basename[:m.start()]
+            yield basename[: m.start()]
         else:
-            if '.' not in basename and isdir(join(dirname, basename)):
-                init = join(dirname, basename, '__init__.py')
-                if exists(init) or exists(init+'c'):
-                    yield basename    
+            if "." not in basename and isdir(join(dirname, basename)):
+                init = join(dirname, basename, "__init__.py")
+                if exists(init) or exists(init + "c"):
+                    yield basename
+
 
 def find_in_dir_cached(dirname):
     if dirname not in cache:
@@ -71,12 +74,13 @@ def find_in_dir_cached(dirname):
         cache[dirname] = (st.st_mtime, modules)
     return modules
 
+
 def find_package_path(package):
     """
     Get a package as a list, try to find its path (list of dirs) or return None.
     """
     for i in xrange(len(package), 0, -1):
-        package_name = '.'.join(package[:i])
+        package_name = ".".join(package[:i])
         if package_name in sys.modules:
             try:
                 path = sys.modules[package_name].__path__
@@ -86,7 +90,7 @@ def find_package_path(package):
     else:
         i = 0
         path = sys.path
-    
+
     for j in xrange(i, len(package)):
         name = package[j]
         for dir in path:
@@ -96,8 +100,9 @@ def find_package_path(package):
                 break
         else:
             return None
-    
+
     return path
+
 
 def find_modules(package):
     """
@@ -113,19 +118,20 @@ def find_modules(package):
             r.update(find_in_dir_cached(dirname))
             if time.time() - start_time > TIMEOUT:
                 break
-    prefix = ''.join(s+'.' for s in package)
+    prefix = "".join(s + "." for s in package)
     for name in sys.modules:
         if name.startswith(prefix):
-            mod = name[len(prefix):]
-            if '.' not in mod and sys.modules[prefix+mod] is not None:
+            mod = name[len(prefix) :]
+            if "." not in mod and sys.modules[prefix + mod] is not None:
                 r.add(mod)
-    r.discard('__init__')
+    r.discard("__init__")
     return sorted(r)
+
 
 def simple_parse_source(mod_name):
     # TODO: add parsing of importable constants?
-    package = mod_name.split('.')
-    package[-1] += '.py'
+    package = mod_name.split(".")
+    package[-1] += ".py"
     path = find_package_path(package)
 
     importable = []
@@ -135,21 +141,27 @@ def simple_parse_source(mod_name):
                 in_import_block = False
                 continued_next_line = False
                 for line in fl.readlines():
-                    pattern = '^(.*)$' if continued_next_line else '^(?:class|def|from .*? import|import) ([^(]*).*?$'
+                    pattern = (
+                        "^(.*)$"
+                        if continued_next_line
+                        else "^(?:class|def|from .*? import|import) ([^(]*).*?$"
+                    )
                     mat = re.match(pattern, line)
 
-                    if line.startswith(('from', 'import')):
+                    if line.startswith(("from", "import")):
                         in_import_block = True
                     if mat is None:
                         in_import_block = continued_next_line = False
                     else:
-                        continued_next_line = in_import_block and line.strip().endswith((',', '\\'))
+                        continued_next_line = in_import_block and line.strip().endswith(
+                            (",", "\\")
+                        )
                         if not continued_next_line:
                             in_import_block = False
 
-                        _imps = mat.groups()[0].strip().strip(' ,\\').split(',')
+                        _imps = mat.groups()[0].strip().strip(" ,\\").split(",")
                         for _imp in _imps:
-                            if ' as ' in _imp:
-                                _imp = _imp.split(' as ')[-1]
+                            if " as " in _imp:
+                                _imp = _imp.split(" as ")[-1]
                             importable.append(_imp.strip())
     return sorted(importable)

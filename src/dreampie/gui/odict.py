@@ -29,11 +29,14 @@ __version__ = '0.2.2'
 __all__ = ['OrderedDict', 'SequenceOrderedDict']
 
 import sys
+
 INTP_VER = sys.version_info[:2]
 if INTP_VER < (2, 2):
     raise RuntimeError("Python v.2.2 or later required")
 
-import types, warnings
+import types
+import warnings
+
 
 class OrderedDict(dict):
     """

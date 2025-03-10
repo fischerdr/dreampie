@@ -18,10 +18,13 @@
 __all__ = ['trunc_traceback']
 
 import sys
+
 py3k = (sys.version_info[0] == 3)
-import traceback
 import linecache
+import traceback
+
 from StringIO import StringIO
+
 
 def unicodify(s):
     """Fault-tolerant conversion to unicode"""

@@ -17,8 +17,9 @@
 
 __all__ = ['split_to_singles']
 
-import tokenize
 import itertools
+import tokenize
+
 
 class ReadLiner(object):
     """

@@ -1,24 +1,25 @@
 # Copyright 2009 Noam Yorav-Raphael
 #
 # This file is part of DreamPie.
-# 
+#
 # DreamPie is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # DreamPie is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with DreamPie.  If not, see <http://www.gnu.org/licenses/>.
 
-__all__ = ['newline_and_indent']
+__all__ = ["newline_and_indent"]
 
 from . import pyparse
 from .common import get_text
+
 
 def newline_and_indent(sourceview, INDENT_WIDTH):
     """
@@ -36,11 +37,11 @@ def newline_and_indent(sourceview, INDENT_WIDTH):
         line = get_text(sb, sb.get_iter_at_line(insert().get_line()), insert())
         i, n = 0, len(line)
         while i < n and line[i] in " \t":
-            i = i+1
+            i = i + 1
         if i == n:
             # the cursor is in or at leading indentation in a continuation
             # line; just copy the indentation
-            sb.insert_at_cursor('\n'+line)
+            sb.insert_at_cursor("\n" + line)
             sourceview.scroll_mark_onscreen(sb.get_insert())
             return True
         indent = line[:i]
@@ -48,25 +49,27 @@ def newline_and_indent(sourceview, INDENT_WIDTH):
         i = 0
         while line and line[-1] in " \t":
             line = line[:-1]
-            i = i+1
+            i = i + 1
         if i:
-            sb.delete(sb.get_iter_at_line_offset(insert().get_line(),
-                                                 len(line)),
-                      insert())
+            sb.delete(
+                sb.get_iter_at_line_offset(insert().get_line(), len(line)), insert()
+            )
         # strip whitespace after insert point
-        it = insert(); it.forward_to_line_end()
+        it = insert()
+        it.forward_to_line_end()
         after_insert = get_text(sb, insert(), it)
         i = 0
         while i < len(after_insert) and after_insert[i] in " \t":
             i += 1
         if i > 0:
-            it = insert(); it.forward_chars(i)
+            it = insert()
+            it.forward_chars(i)
             sb.delete(insert(), it)
         # start new line
-        sb.insert_at_cursor('\n')
+        sb.insert_at_cursor("\n")
         # scroll to see the beginning of the line
         sourceview.scroll_mark_onscreen(sb.get_insert())
-        #self.scrolledwindow_sourceview.get_hadjustment().set_value(0)
+        # self.scrolledwindow_sourceview.get_hadjustment().set_value(0)
 
         # adjust indentation for continuations and block
         # open/close first need to find the last stmt
@@ -87,7 +90,7 @@ def newline_and_indent(sourceview, INDENT_WIDTH):
                 # last open bracket structure; else indent one
                 # level beyond the indent of the line with the
                 # last open bracket
-                sb.insert_at_cursor(' ' * y.compute_bracket_indent())
+                sb.insert_at_cursor(" " * y.compute_bracket_indent())
             elif c == pyparse.C_BACKSLASH:
                 # if more than one line in this stmt already, just
                 # mimic the current indent; else if initial line
@@ -97,7 +100,7 @@ def newline_and_indent(sourceview, INDENT_WIDTH):
                 if y.get_num_lines_in_stmt() > 1:
                     sb.insert_at_cursor(indent)
                 else:
-                    sb.insert_at_cursor(' ' * y.compute_backslash_indent())
+                    sb.insert_at_cursor(" " * y.compute_backslash_indent())
             else:
                 assert False, "bogus continuation type %r" % (c,)
             return True
@@ -110,8 +113,7 @@ def newline_and_indent(sourceview, INDENT_WIDTH):
             indent = (indent // INDENT_WIDTH + 1) * INDENT_WIDTH
         elif y.is_block_closer():
             indent = max(((indent - 1) // INDENT_WIDTH) * INDENT_WIDTH, 0)
-        sb.insert_at_cursor(' ' * indent)
+        sb.insert_at_cursor(" " * indent)
         return True
     finally:
         sb.end_user_action()
-

@@ -7,16 +7,22 @@
 # Message-ID: <1062087716.1196.5.camel@emperor.homelinux.net>
 #     "The license is whatever you want."
 
-import inspect, linecache, sys, traceback
-from repr import repr as safe_repr
-from cStringIO import StringIO
+import inspect
+import linecache
+import sys
+import traceback
 from gettext import gettext as _
-#from smtplib import SMTP
 
 import gtk
 import pango
+from cStringIO import StringIO
+from repr import repr as safe_repr
 
 from .bug_report import bug_report
+
+#from smtplib import SMTP
+
+
 
 #def analyse (exctyp, value, tb):
 #    trace = StringIO()
@@ -40,7 +46,8 @@ def lookup (name, frame, lcls):
     return None, []
 
 def analyse (exctyp, value, tb):
-    import tokenize, keyword
+    import keyword
+    import tokenize
 
     trace = StringIO()
     nlines = 1

@@ -16,28 +16,34 @@
 # along with DreamPie.  If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import with_statement
+
 import sys
+
 py3k = (sys.version_info[0] == 3)
 import os
-import time
 import socket
+import time
 from select import select
+
 if py3k:
     from io import StringIO
 else:
     from StringIO import StringIO
+
+import codeop
+import inspect
+import keyword
 import linecache
+import pprint
+import pydoc
+import signal
 import traceback
 import types
-import keyword
-import __builtin__
-import inspect
-import pydoc
-import pprint
-import codeop
-import signal
 from contextlib import contextmanager
 from itertools import chain
+
+import __builtin__
+
 try:
     # Executing multiple statements in 'single' mode (print results) is done
     # with the ast module. Python 2.5 doesn't have it, so we use the compiler
@@ -55,22 +61,25 @@ else:
         ast = None
 if ast is None:
     from .split_to_singles import split_to_singles
+
 import __future__
 
 if sys.platform == 'win32':
-    from msvcrt import get_osfhandle #@UnresolvedImport
     from ctypes import byref, c_ulong, windll
+    from msvcrt import get_osfhandle  # @UnresolvedImport
     PeekNamedPipe = windll.kernel32.PeekNamedPipe #@UndefinedVariable
-
-from .trunc_traceback import trunc_traceback
-from .find_modules import find_modules, simple_parse_source
-# We don't use relative import because of a Jython 2.5.1 bug.
-from dreampielib.common.objectstream import send_object, recv_object
-
-#import rpdb2; rpdb2.start_embedded_debugger('a')
 
 import logging
 from logging import debug
+
+# We don't use relative import because of a Jython 2.5.1 bug.
+from dreampielib.common.objectstream import recv_object, send_object
+
+from .find_modules import find_modules, simple_parse_source
+from .trunc_traceback import trunc_traceback
+
+#import rpdb2; rpdb2.start_embedded_debugger('a')
+
 #logging.basicConfig(filename='/tmp/dreampie_subp_log', level=logging.DEBUG)
 
 # time interval to process GUI events, in seconds

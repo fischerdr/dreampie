@@ -2,21 +2,21 @@
 # http://code.activestate.com/recipes/440554/
 # Licensed under the PSF license.
 
+import errno
 import os
 import subprocess
-import errno
-import time
 import sys
+import time
 
 PIPE = subprocess.PIPE
 
 if subprocess.mswindows:
-    from msvcrt import get_osfhandle #@UnresolvedImport
     from ctypes import byref, c_ulong, windll
+    from msvcrt import get_osfhandle  # @UnresolvedImport
     PeekNamedPipe = windll.kernel32.PeekNamedPipe #@UndefinedVariable
 else:
-    import select
     import fcntl
+    import select
 
 class Popen(subprocess.Popen):
     def recv(self, maxsize=None):

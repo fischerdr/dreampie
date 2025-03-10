@@ -1,24 +1,25 @@
 # Copyright 2009 Noam Yorav-Raphael
 #
 # This file is part of DreamPie.
-# 
+#
 # DreamPie is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # DreamPie is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with DreamPie.  If not, see <http://www.gnu.org/licenses/>.
 
-__all__ = ['Config']
+__all__ = ["Config"]
 
-import sys
 import os
+import sys
+
 from ConfigParser import RawConfigParser
 from StringIO import StringIO
 
@@ -230,19 +231,22 @@ error-bg-set = True
 
 """
 
+
 def get_config_fn():
-    if sys.platform != 'win32':
-        return os.path.expanduser('~/.dreampie')
+    if sys.platform != "win32":
+        return os.path.expanduser("~/.dreampie")
     else:
         # On win32, expanduser doesn't work when the path includes unicode
         # chars.
         import ctypes
+
         MAX_PATH = 255
-        nFolder = 26 # CSIDL_APPDATA
+        nFolder = 26  # CSIDL_APPDATA
         flags = 0
         buf = ctypes.create_unicode_buffer(MAX_PATH)
         ctypes.windll.shell32.SHGetFolderPathW(None, nFolder, None, flags, buf)
-        return os.path.join(buf.value, 'DreamPie')
+        return os.path.join(buf.value, "DreamPie")
+
 
 class Config(object):
     """
@@ -250,6 +254,7 @@ class Config(object):
     Upon initialization, the loaded file is updated with the default values.
     config.save() will save the current state.
     """
+
     def __init__(self):
         self.filename = get_config_fn()
         try:
@@ -261,28 +266,28 @@ class Config(object):
         self.parser.readfp(f)
         self.parser.read(self.filename)
         self.save()
-    
-    def get(self, key, section='DreamPie'):
+
+    def get(self, key, section="DreamPie"):
         return self.parser.get(section, key)
-    
-    def get_bool(self, key, section='DreamPie'):
+
+    def get_bool(self, key, section="DreamPie"):
         return self.parser.getboolean(section, key)
-    
-    def get_int(self, key, section='DreamPie'):
+
+    def get_int(self, key, section="DreamPie"):
         return self.parser.getint(section, key)
-    
-    def set(self, key, value, section='DreamPie'):
+
+    def set(self, key, value, section="DreamPie"):
         self.parser.set(section, key, value)
-    
-    def set_bool(self, key, value, section='DreamPie'):
-        value_str = 'True' if value else 'False'
+
+    def set_bool(self, key, value, section="DreamPie"):
+        value_str = "True" if value else "False"
         self.set(key, value_str, section)
-    
-    def set_int(self, key, value, section='DreamPie'):
+
+    def set_int(self, key, value, section="DreamPie"):
         if value != int(value):
             raise ValueError("Expected an int, got %r" % value)
-        self.set(key, '%d' % value, section)
-    
+        self.set(key, "%d" % value, section)
+
     def sections(self):
         return self.parser.sections()
 
@@ -296,7 +301,6 @@ class Config(object):
         return self.parser.remove_section(section)
 
     def save(self):
-        f = open(self.filename, 'w')
+        f = open(self.filename, "w")
         self.parser.write(f)
         f.close()
-

@@ -1,24 +1,24 @@
 # Copyright 2009 Noam Yorav-Raphael
 #
 # This file is part of DreamPie.
-# 
+#
 # DreamPie is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # DreamPie is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with DreamPie.  If not, see <http://www.gnu.org/licenses/>.
 
 # This file is based on idlelib/HyperParser.py from Python 2.5.
 # Copyright Python Software Foundation.
 
-__all__ = ['HyperParser']
+__all__ = ["HyperParser"]
 """
 This module defines the HyperParser class, which provides advanced parsing
 abilities.
@@ -27,9 +27,11 @@ on the proper indentation of code. HyperParser gives some information on the
 structure of code.
 """
 
-import string
 import keyword
+import string
+
 from . import pyparse
+
 
 class HyperParser(object):
 
@@ -44,14 +46,16 @@ class HyperParser(object):
         # We add the newline because pyparse requires a newline at end.
         # We add a space so that index won't be at end of line, so that
         # its status will be the same as the char before it, if should.
-        parser.set_str(text+' \n')
+        parser.set_str(text + " \n")
         parser.set_lo(0)
 
         self.bracketing = parser.get_last_stmt_bracketing()
         # find which pairs of bracketing are openers. These always correspond
         # to a character of text.
-        self.isopener = [i>0 and self.bracketing[i][1] > self.bracketing[i-1][1]
-                         for i in range(len(self.bracketing))]
+        self.isopener = [
+            i > 0 and self.bracketing[i][1] > self.bracketing[i - 1][1]
+            for i in range(len(self.bracketing))
+        ]
 
         self.index = None
         self.set_index(index)
@@ -63,28 +67,33 @@ class HyperParser(object):
         self.index = index
         # find the rightmost bracket to which index belongs
         self.indexbracket = 0
-        while self.indexbracket < len(self.bracketing)-1 and \
-              self.bracketing[self.indexbracket+1][0] < index:
+        while (
+            self.indexbracket < len(self.bracketing) - 1
+            and self.bracketing[self.indexbracket + 1][0] < index
+        ):
             self.indexbracket += 1
-        if self.indexbracket < len(self.bracketing)-1 and \
-           self.bracketing[self.indexbracket+1][0] == index and \
-           not self.isopener[self.indexbracket+1]:
+        if (
+            self.indexbracket < len(self.bracketing) - 1
+            and self.bracketing[self.indexbracket + 1][0] == index
+            and not self.isopener[self.indexbracket + 1]
+        ):
             self.indexbracket += 1
 
     def is_in_string(self):
         """Is the index given to the HyperParser is in a string?"""
         # The bracket to which we belong should be an opener.
         # If it's an opener, it has to have a character.
-        return self.isopener[self.indexbracket] and \
-               self.text[self.bracketing[self.indexbracket][0]] in ('"', "'")
+        return self.isopener[self.indexbracket] and self.text[
+            self.bracketing[self.indexbracket][0]
+        ] in ('"', "'")
 
     def is_in_code(self):
         """Is the index given to the HyperParser is in a normal code?"""
-        return not self.isopener[self.indexbracket] or \
-               self.text[self.bracketing[self.indexbracket][0]] not in \
-                                                                ('#', '"', "'")
+        return not self.isopener[self.indexbracket] or self.text[
+            self.bracketing[self.indexbracket][0]
+        ] not in ("#", '"', "'")
 
-    def get_surrounding_brackets(self, openers='([{'):
+    def get_surrounding_brackets(self, openers="([{"):
         """If the index given to the HyperParser is surrounded by a bracket
         defined in openers (or at least has one before it), return the
         indices of the opening bracket and the closing bracket.
@@ -93,16 +102,20 @@ class HyperParser(object):
         """
         bracketinglevel = self.bracketing[self.indexbracket][1]
         before = self.indexbracket
-        while not self.isopener[before] or \
-              self.text[self.bracketing[before][0]] not in openers or \
-              self.bracketing[before][1] > bracketinglevel:
+        while (
+            not self.isopener[before]
+            or self.text[self.bracketing[before][0]] not in openers
+            or self.bracketing[before][1] > bracketinglevel
+        ):
             before -= 1
             if before < 0:
                 return (None, None)
             bracketinglevel = min(bracketinglevel, self.bracketing[before][1])
         after = self.indexbracket + 1
-        while after < len(self.bracketing) and \
-              self.bracketing[after][1] >= bracketinglevel:
+        while (
+            after < len(self.bracketing)
+            and self.bracketing[after][1] >= bracketinglevel
+        ):
             after += 1
 
         beforeindex = self.bracketing[before][0]
@@ -126,10 +139,11 @@ class HyperParser(object):
     # identifiers.
     def _eat_identifier(self, str, limit, pos):
         i = pos
-        while i > limit and str[i-1] in self._id_chars:
+        while i > limit and str[i - 1] in self._id_chars:
             i -= 1
-        if i < pos and (str[i] not in self._id_first_chars or \
-                        keyword.iskeyword(str[i:pos])):
+        if i < pos and (
+            str[i] not in self._id_first_chars or keyword.iskeyword(str[i:pos])
+        ):
             i = pos
         return pos - i
 
@@ -138,8 +152,9 @@ class HyperParser(object):
         index, which is empty if there is no real one.
         """
         if not self.is_in_code():
-            raise ValueError("get_expression should only be called if index "\
-                             "is inside a code.")
+            raise ValueError(
+                "get_expression should only be called if index " "is inside a code."
+            )
 
         text = self.text
         bracketing = self.bracketing
@@ -154,22 +169,24 @@ class HyperParser(object):
         while 1:
             # Eat whitespaces, comments, and if postdot_phase is False - one dot
             while 1:
-                if pos>brck_limit and text[pos-1] in self._whitespace_chars:
+                if pos > brck_limit and text[pos - 1] in self._whitespace_chars:
                     # Eat a whitespace
                     pos -= 1
-                elif not postdot_phase and \
-                     pos > brck_limit and text[pos-1] == '.':
+                elif not postdot_phase and pos > brck_limit and text[pos - 1] == ".":
                     # Eat a dot
                     pos -= 1
                     postdot_phase = True
                 # The next line will fail if we are *inside* a comment, but we
                 # shouldn't be.
-                elif pos == brck_limit and brck_index > 0 and \
-                     text[bracketing[brck_index-1][0]] == '#':
+                elif (
+                    pos == brck_limit
+                    and brck_index > 0
+                    and text[bracketing[brck_index - 1][0]] == "#"
+                ):
                     # Eat a comment
                     brck_index -= 2
                     brck_limit = bracketing[brck_index][0]
-                    pos = bracketing[brck_index+1][0]
+                    pos = bracketing[brck_index + 1][0]
                 else:
                     # If we didn't eat anything, quit.
                     break
@@ -192,7 +209,7 @@ class HyperParser(object):
                 # We are at a bracketing limit. If it is a closing bracket,
                 # eat the bracket, otherwise, stop the search.
                 level = bracketing[brck_index][1]
-                while brck_index > 0 and bracketing[brck_index-1][1] > level:
+                while brck_index > 0 and bracketing[brck_index - 1][1] > level:
                     brck_index -= 1
                 if bracketing[brck_index][0] == brck_limit:
                     # We were not at the end of a closing bracket
@@ -213,4 +230,4 @@ class HyperParser(object):
                 # We've found an operator or something.
                 break
 
-        return text[last_identifier_pos:self.index]
+        return text[last_identifier_pos : self.index]
