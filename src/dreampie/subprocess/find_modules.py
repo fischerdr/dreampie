@@ -23,6 +23,9 @@ import sys
 import time
 from os.path import exists, isdir, isfile, join
 
+# Import Python 2 to 3 compatibility module
+from dreampie.py2to3 import py3k, xrange
+
 TIMEOUT = 1  # Stop after 1 second
 
 # Match any of the suffixes

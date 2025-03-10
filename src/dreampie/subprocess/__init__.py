@@ -1,29 +1,30 @@
 # Copyright 2010 Noam Yorav-Raphael
 #
 # This file is part of DreamPie.
-# 
+#
 # DreamPie is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # DreamPie is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with DreamPie.  If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import with_statement
 
-import sys
-
-py3k = (sys.version_info[0] == 3)
 import os
 import socket
+import sys
 import time
 from select import select
+
+# Import Python 2 to 3 compatibility module
+from dreampie.py2to3 import basestring, long, py3k, unicode
 
 if py3k:
     from io import StringIO
@@ -56,7 +57,7 @@ else:
     # IronPython 2.7.1 has the ast module, but can't compile from an AST.
     # If that's the case, the ast module doesn't interest us.
     try:
-        compile(compile('a', 'fn', 'exec', ast.PyCF_ONLY_AST), 'fn', 'exec')
+        compile(compile("a", "fn", "exec", ast.PyCF_ONLY_AST), "fn", "exec")
     except TypeError:
         ast = None
 if ast is None:
@@ -64,10 +65,11 @@ if ast is None:
 
 import __future__
 
-if sys.platform == 'win32':
+if sys.platform == "win32":
     from ctypes import byref, c_ulong, windll
     from msvcrt import get_osfhandle  # @UnresolvedImport
-    PeekNamedPipe = windll.kernel32.PeekNamedPipe #@UndefinedVariable
+
+    PeekNamedPipe = windll.kernel32.PeekNamedPipe  # @UndefinedVariable
 
 import logging
 from logging import debug
@@ -78,9 +80,9 @@ from dreampielib.common.objectstream import recv_object, send_object
 from .find_modules import find_modules, simple_parse_source
 from .trunc_traceback import trunc_traceback
 
-#import rpdb2; rpdb2.start_embedded_debugger('a')
+# import rpdb2; rpdb2.start_embedded_debugger('a')
 
-#logging.basicConfig(filename='/tmp/dreampie_subp_log', level=logging.DEBUG)
+# logging.basicConfig(filename='/tmp/dreampie_subp_log', level=logging.DEBUG)
 
 # time interval to process GUI events, in seconds
 GUI_SLEEP = 0.1
@@ -89,39 +91,46 @@ GUI_SLEEP = 0.1
 MAX_RES_STR_LEN = 1000000
 
 rpc_funcs = set()
+
+
 # A decorator which adds the function name to rpc_funcs
 def rpc_func(func):
     rpc_funcs.add(func.func_name)
     return func
 
+
 # Taken from codeop.py
 PyCF_DONT_IMPLY_DEDENT = 0x200
-_features = [getattr(__future__, fname)
-             for fname in __future__.all_feature_names]
+_features = [getattr(__future__, fname) for fname in __future__.all_feature_names]
 
-case_insen_filenames = (os.path.normcase('A') == 'a')
+case_insen_filenames = os.path.normcase("A") == "a"
+
 
 # Fault-tolerant conversion to unicode
 def unicodify(s):
     if py3k:
         if isinstance(s, bytes):
             try:
-                return s.decode('utf-8')
+                return s.decode("utf-8")
             except UnicodeDecodeError:
                 return str(s)
         return str(s)
     else:
         if isinstance(s, str):
             try:
-                return s.decode('utf-8')
+                return s.decode("utf-8")
             except UnicodeDecodeError:
                 return unicode(s)
         return unicode(s)
 
+
 class PlainTextDoc(pydoc.TextDoc):
     """pydoc.TextDoc returns strange bold text, so we disable it."""
+
     def bold(self, text):
         return text
+
+
 textdoc = PlainTextDoc()
 
 # A mapping from id of types to boolean: is the type callable only.
@@ -131,27 +140,40 @@ textdoc = PlainTextDoc()
 # seems unlikely.
 is_callable_cache = {}
 # magic methods for objects with defined operators
-operator_methods = ['__%s__' % s for s in
-                    'add sub mul div floordiv truediv mod divmod pow lshift '
-                    'rshift and xor or'.split()]
+operator_methods = [
+    "__%s__" % s
+    for s in "add sub mul div floordiv truediv mod divmod pow lshift "
+    "rshift and xor or".split()
+]
 
 quit_msg = """\
 Press Ctrl-Q or close the window if you want to quit DreamPie.
 Press Ctrl-F6 if you want to restart the subprocess."""
+
+
 class Quit(object):
     def __repr__(self):
         return quit_msg
+
     def __call__(self):
         raise RuntimeError(quit_msg)
 
+
 _simple_types = (
-    bool, int, float, complex, type(None), slice,
-    long, # 2to3 replaces long with int, so this is fine
-    )
+    bool,
+    int,
+    float,
+    complex,
+    type(None),
+    slice,
+    long,  # 2to3 replaces long with int, so this is fine
+)
 _string_types = (
-    bytes if py3k else str, # 2to3 can't replace str with bytes
-    unicode, # 2to3 replaces unicode with str, so this is fine
-    )
+    bytes if py3k else str,  # 2to3 can't replace str with bytes
+    unicode,  # 2to3 replaces unicode with str, so this is fine
+)
+
+
 def is_key_reprable(obj, max_depth=2):
     """
     Check whether an object (which is a dict key) simple enough
@@ -166,14 +188,17 @@ def is_key_reprable(obj, max_depth=2):
         if max_depth <= 0 or len(obj) > 5:
             return False
         else:
-            return all(is_key_reprable(x, max_depth-1) for x in obj)
+            return all(is_key_reprable(x, max_depth - 1) for x in obj)
     else:
         return False
 
+
 # SIGINT masking
 
+
 def can_mask_sigint():
-    return sys.platform in ('linux2', 'win32')
+    return sys.platform in ("linux2", "win32")
+
 
 def unmask_sigint():
     # We want to mask ctrl-c events when not running user code, to allow
@@ -184,71 +209,73 @@ def unmask_sigint():
     # method to know that.)
     # Also, on win32 we may get unwanted ctrl-c events if the user is
     # running a subprocess. Since all processes in the same "console group"
-    # get the event, the subprocess may get it before us and exit. Then we 
+    # get the event, the subprocess may get it before us and exit. Then we
     # get out of the try-except block, and only later we get the ctrl-c.
-    if sys.platform == 'linux2':
+    if sys.platform == "linux2":
         signal.signal(signal.SIGINT, signal.default_int_handler)
-    elif sys.platform == 'win32':
-        windll.kernel32.SetConsoleCtrlHandler(None, False) #@UndefinedVariable
+    elif sys.platform == "win32":
+        windll.kernel32.SetConsoleCtrlHandler(None, False)  # @UndefinedVariable
     else:
         pass
 
+
 def mask_sigint():
-    if sys.platform == 'linux2':
+    if sys.platform == "linux2":
         signal.signal(signal.SIGINT, signal.SIG_IGN)
-    elif sys.platform == 'win32':
-        windll.kernel32.SetConsoleCtrlHandler(None, True) #@UndefinedVariable
+    elif sys.platform == "win32":
+        windll.kernel32.SetConsoleCtrlHandler(None, True)  # @UndefinedVariable
     else:
         pass
+
 
 class Subprocess(object):
     def __init__(self, port):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.sock.connect(('localhost', port))
+        self.sock.connect(("localhost", port))
 
         # Mask SIGINT/Ctrl-C
         mask_sigint()
-        
+
         # Become a process group leader
-        if sys.platform != 'win32':
+        if sys.platform != "win32":
             os.setpgrp()
-        
+
         # Make sys.displayhook change self.last_res
         self.last_res = None
         sys.displayhook = self.displayhook
 
         # Trick things like pdb into thinking that the namespace we create is
         # the main module
-        mainmodule = types.ModuleType('__main__')
-        sys.modules['__main__'] = mainmodule
+        mainmodule = types.ModuleType("__main__")
+        sys.modules["__main__"] = mainmodule
         self.locs = mainmodule.__dict__
-        
+
         # Add '' to sys.path, to be like the regular Python interpreter
-        sys.path.insert(0, '')
-        
+        sys.path.insert(0, "")
+
         # Set sys.argv to [''], to be like the regular Python interpreter
         # (Otherwise multiprocessing on win32 starts running subp_main.py)
-        sys.argv = ['']
+        sys.argv = [""]
 
         # Adjust exit and quit objects
         __builtin__.exit = __builtin__.quit = Quit()
-        
+
         self.gui_handlers = [GtkHandler(), GIHandler(), Qt4Handler(), TkHandler()]
         self.idle_paused = False
 
         self.gid = 0
         self.flags = 0
-        
+
         # Config
         self.is_pprint = False
         self.is_matplotlib_ia_switch = False
         self.is_matplotlib_ia_warn = False
         self.reshist_size = 0
         self.parse_files_to_autocomplete = False
-        
+
         # Did we already handle matplotlib in non-interactive mode?
         self.matplotlib_ia_handled = False
-        
+
         # The result history index of the next value to enter the history
         self.reshist_counter = 0
 
@@ -311,8 +338,8 @@ class Subprocess(object):
             r = codeop.compile_command(source)
         except (SyntaxError, OverflowError, ValueError):
             return False
-        return (r is None)
-    
+        return r is None
+
     @staticmethod
     def update_features(cur_flags, co_flags):
         """
@@ -323,7 +350,7 @@ class Subprocess(object):
             if co_flags & feature.compiler_flag:
                 cur_flags |= feature.compiler_flag
         return cur_flags
-    
+
     def compile_ast(self, source):
         """
         Compile source into a list of code objects, updating linecache, self.gid
@@ -333,29 +360,28 @@ class Subprocess(object):
         This version uses the ast module available in Python 2.6 and Jython 2.5.
         This version always returns a list with one item.
         """
-        filename = '<pyshell#%d>' % self.gid
+        filename = "<pyshell#%d>" % self.gid
         try:
-            a = compile(source, filename, 'exec',
-                        ast.PyCF_ONLY_AST | self.flags)
+            a = compile(source, filename, "exec", ast.PyCF_ONLY_AST | self.flags)
             b = ast.Interactive(a.body)
-            codeob = compile(b, filename, 'single', self.flags)
+            codeob = compile(b, filename, "single", self.flags)
         except SyntaxError as e:
             # Sometimes lineno or offset are not defined. Zero them in that case.
             lineno = e.lineno if e.lineno is not None else 1
             offset = e.offset if e.offset is not None else 1
-            return False, (unicode(e.msg), lineno-1, offset-1)
+            return False, (unicode(e.msg), lineno - 1, offset - 1)
         except ValueError as e:
             # Compiling "\x%" raises a ValueError
             return False, (unicode(e), 0, 0)
-            
+
         # Update gid, linecache, flags
         self.gid += 1
-        lines = [x+'\n' for x in source.split("\n")]
-        linecache.cache[filename] = len(source)+1, None, lines, filename
+        lines = [x + "\n" for x in source.split("\n")]
+        linecache.cache[filename] = len(source) + 1, None, lines, filename
         self.flags = self.update_features(self.flags, codeob.co_flags)
-        
+
         return True, [codeob]
-    
+
     def compile_no_ast(self, source):
         """
         This function does the same thing as compile_ast, but it works without
@@ -364,20 +390,20 @@ class Subprocess(object):
         split_source = split_to_singles(source)
         # This added newline is because sometimes the CommandCompiler wants
         # more if there isn't a newline at the end
-        split_source[-1] += '\n'
+        split_source[-1] += "\n"
         line_count = 0
         # Compile to check for syntax errors
         cur_flags = self.flags
         for src in split_source:
             try:
-                c = compile(src, '<pyshell>', 'single', cur_flags)
+                c = compile(src, "<pyshell>", "single", cur_flags)
             except SyntaxError as e:
                 # Sometimes lineno or offset are not defined. Zero them in that
                 # case.
                 lineno = e.lineno if e.lineno is not None else 1
                 offset = e.offset if e.offset is not None else 1
                 msg = unicodify(e.msg)
-                return False, (msg, lineno-1+line_count, offset-1)
+                return False, (msg, lineno - 1 + line_count, offset - 1)
             except ValueError as e:
                 # Compiling "\x%" raises a ValueError
                 return False, (unicode(e), 0, 0)
@@ -385,7 +411,7 @@ class Subprocess(object):
                 if c is None:
                     return False, None
                 else:
-                    line_count += src.count('\n')
+                    line_count += src.count("\n")
                     cur_flags = self.update_features(cur_flags, c.co_flags)
 
         # If compilation was successful...
@@ -393,16 +419,16 @@ class Subprocess(object):
         for src in split_source:
             # We compile again, so as not to put into linecache code
             # which had no effect
-            filename = '<pyshell#%d>' % self.gid
+            filename = "<pyshell#%d>" % self.gid
             self.gid += 1
-            lines = [x+'\n' for x in src.split("\n")]
-            linecache.cache[filename] = len(src)+1, None, lines, filename
-            codeob = compile(src, filename, 'single', self.flags)
+            lines = [x + "\n" for x in src.split("\n")]
+            linecache.cache[filename] = len(src) + 1, None, lines, filename
+            codeob = compile(src, filename, "single", self.flags)
             self.flags = self.update_features(self.flags, codeob.co_flags)
             codeobs.append(codeob)
-        
+
         return True, codeobs
-    
+
     @staticmethod
     def safe_pformat(obj):
         """
@@ -411,12 +437,15 @@ class Subprocess(object):
         """
         try:
             return unicode(pprint.pformat(obj))
-        except:
+        except Exception:
             from warnings import warn
-            warn('pprint raised an exception, using repr instead. '
-                 'To reproduce, run: "from pprint import pprint; pprint(_)"')
+
+            warn(
+                "pprint raised an exception, using repr instead. "
+                'To reproduce, run: "from pprint import pprint; pprint(_)"'
+            )
             return unicode(repr(obj))
-    
+
     @rpc_func
     def execute(self, source):
         """
@@ -434,7 +463,7 @@ class Subprocess(object):
         """
         # pause_idle was called before execute, disable it.
         self.idle_paused = False
-        
+
         if ast:
             success, r = self.compile_ast(source)
         else:
@@ -445,14 +474,14 @@ class Subprocess(object):
         else:
             yield True, None
         codeobs = r
-            
+
         self.last_res = None
         try:
             unmask_sigint()
             try:
                 # Execute
                 for codeob in codeobs:
-                    exec codeob in self.locs
+                    exec(codeob, self.locs)
                 # Work around http://bugs.python.org/issue8213 - stdout buffered
                 # in Python 3.
                 if not sys.stdout.closed:
@@ -467,14 +496,14 @@ class Subprocess(object):
                     else:
                         res_str = unicode(repr(self.last_res))
                     if len(res_str) > MAX_RES_STR_LEN:
-                        res_str = (res_str[:MAX_RES_STR_LEN]
-                                   +'\n[%d chars truncated]' % (
-                                        len(res_str)-MAX_RES_STR_LEN))
+                        res_str = res_str[
+                            :MAX_RES_STR_LEN
+                        ] + "\n[%d chars truncated]" % (len(res_str) - MAX_RES_STR_LEN)
                 else:
                     res_str = None
             finally:
                 mask_sigint()
-        except:
+        except Exception:
             if not sys.stdout.closed:
                 sys.stdout.flush()
             excinfo = sys.exc_info()
@@ -492,17 +521,17 @@ class Subprocess(object):
                 res_no = None
         # Discard the reference to the result
         self.last_res = None
-            
+
         # Send back any data left on stdin.
         rem_stdin = []
-        if sys.platform == 'linux2':
+        if sys.platform == "linux2":
             while select([sys.stdin], [], [], 0)[0]:
                 r = os.read(sys.stdin.fileno(), 8192)
                 if not r:
                     # File may be in error state
                     break
                 rem_stdin.append(unicodify(r))
-        elif sys.platform == 'win32':
+        elif sys.platform == "win32":
             fd = sys.stdin.fileno()
             handle = get_osfhandle(fd)
             avail = c_ulong(0)
@@ -514,8 +543,8 @@ class Subprocess(object):
             # I don't know how to do this in Jython.
             pass
 
-        rem_stdin = u''.join(rem_stdin)
-        
+        rem_stdin = "".join(rem_stdin)
+
         # Check if matplotlib in non-interactive mode was imported
         self.check_matplotlib_ia()
 
@@ -529,15 +558,15 @@ class Subprocess(object):
         'resume_idle'.
         """
         self.idle_paused = True
-    
+
     @rpc_func
     def resume_idle(self):
         self.idle_paused = False
-    
+
     @rpc_func
     def set_pprint(self, is_pprint):
         self.is_pprint = is_pprint
-    
+
     @rpc_func
     def set_matplotlib_ia(self, is_switch, is_warn):
         self.is_matplotlib_ia_switch = is_switch
@@ -546,15 +575,17 @@ class Subprocess(object):
     @rpc_func
     def set_reshist_size(self, new_reshist_size):
         if new_reshist_size < self.reshist_size:
-            for i in range(self.reshist_counter-self.reshist_size,
-                           self.reshist_counter-new_reshist_size):
-                self.locs.pop('_%d' % i, None)
+            for i in range(
+                self.reshist_counter - self.reshist_size,
+                self.reshist_counter - new_reshist_size,
+            ):
+                self.locs.pop("_%d" % i, None)
         self.reshist_size = new_reshist_size
-    
+
     @rpc_func
     def clear_reshist(self):
-        for i in range(self.reshist_counter-self.reshist_size, self.reshist_counter):
-            self.locs.pop('_%d' % i, None)
+        for i in range(self.reshist_counter - self.reshist_size, self.reshist_counter):
+            self.locs.pop("_%d" % i, None)
 
     def store_in_reshist(self, res):
         """
@@ -564,23 +595,23 @@ class Subprocess(object):
         """
         if res is None:
             return None
-            
-        if '__' in self.locs:
-            self.locs['___'] = self.locs['__']
-        if '_' in self.locs:
-            self.locs['__'] = self.locs['_']
-        self.locs['_'] = res
-        
+
+        if "__" in self.locs:
+            self.locs["___"] = self.locs["__"]
+        if "_" in self.locs:
+            self.locs["__"] = self.locs["_"]
+        self.locs["_"] = res
+
         if self.reshist_size == 0:
             return None
         res_index = self.reshist_counter
-        self.locs['_%d' % res_index] = res
+        self.locs["_%d" % res_index] = res
         del_index = self.reshist_counter - self.reshist_size
         if del_index >= 0:
-            self.locs.pop('_%d' % del_index, None)
+            self.locs.pop("_%d" % del_index, None)
         self.reshist_counter += 1
         return res_index
-    
+
     @staticmethod
     def split_list(L, public_set):
         """
@@ -598,7 +629,7 @@ class Subprocess(object):
                     private.append(x)
         else:
             for x in L:
-                if not x.startswith('_'):
+                if not x.startswith("_"):
                     public.append(x)
                 else:
                     private.append(x)
@@ -617,8 +648,7 @@ class Subprocess(object):
             ids = dir(entity)
             ids = map(unicodify, ids)
             ids.sort()
-            if (isinstance(entity, types.ModuleType)
-                and hasattr(entity, '__all__')):
+            if isinstance(entity, types.ModuleType) and hasattr(entity, "__all__"):
                 all_set = set(entity.__all__)
             else:
                 all_set = None
@@ -638,14 +668,14 @@ class Subprocess(object):
         ids = eval("dir()", namespace) + keyword.kwlist
         ids = map(unicodify, ids)
         ids.sort()
-        if '__all__' in namespace:
-            all_set = set(namespace['__all__'])
+        if "__all__" in namespace:
+            all_set = set(namespace["__all__"])
         else:
             all_set = None
         public, private = self.split_list(ids, all_set)
-        
+
         return public, private
-        
+
     @rpc_func
     def get_func_args(self, expr):
         """Return the argument names of the function (a list of strings)"""
@@ -657,12 +687,11 @@ class Subprocess(object):
             if not py3k:
                 args = inspect.getargspec(obj)[0]
             else:
-                args = inspect.getfullargspec(obj).args #@UndefinedVariable
+                args = inspect.getfullargspec(obj).args  # @UndefinedVariable
         except TypeError:
             return None
         # There may be nested args, so we filter them
-        return [unicodify(s) for s in args
-                if isinstance(s, basestring)]
+        return [unicodify(s) for s in args if isinstance(s, basestring)]
 
     @staticmethod
     def dict_key_repr(x):
@@ -670,16 +699,16 @@ class Subprocess(object):
         repr() used for dict keys.
         Replaced unicode strings like u'hello' with regular strings, if possible.
         """
-        if py3k or type(x) != unicode:
+        if py3k or type(x) is not unicode:
             return repr(x)
         else:
             try:
-                x.decode('ascii')
+                x.decode("ascii")
             except UnicodeDecodeError:
                 return repr(x)
             else:
                 return repr(str(x))
-    
+
     @rpc_func
     def complete_dict_keys(self, expr):
         """
@@ -692,13 +721,14 @@ class Subprocess(object):
             return None
         if not isinstance(obj, dict) or len(obj) > 1000:
             return None
-        return sorted(unicodify(self.dict_key_repr(x)) for x in obj if is_key_reprable(x))
-        
+        return sorted(
+            unicodify(self.dict_key_repr(x)) for x in obj if is_key_reprable(x)
+        )
 
     @rpc_func
     def find_modules(self, package):
         if package:
-            package = package.split('.')
+            package = package.split(".")
         else:
             package = []
         return [unicodify(s) for s in find_modules(package)]
@@ -716,36 +746,33 @@ class Subprocess(object):
 
         if mod is None:  # hasn't previously been imported
             if len(subs) != 0:  # isn't a file
-                init_contents = self.simple_parse_source(mod_name + '.__init__')
+                init_contents = self.simple_parse_source(mod_name + ".__init__")
                 return sorted(subs + [x for x in init_contents if x not in subs]), []
             ids = self.simple_parse_source(mod_name)  # is a file
         else:
             ids = [unicodify(x) for x in mod.__dict__.iterkeys()]
             ids.extend([x for x in subs if x not in ids])
 
-        if hasattr(mod, '__all__'):
+        if hasattr(mod, "__all__"):
             all_set = set(mod.__all__)
         else:
             all_set = None
 
         return self.split_list(sorted(ids), all_set)
-    
+
     @rpc_func
     def complete_filenames(self, str_prefix, text, str_char, add_quote):
-        is_raw = 'r' in str_prefix.lower()
-        is_unicode = 'u' in str_prefix.lower()
+        is_raw = "r" in str_prefix.lower()
+        is_unicode = "u" in str_prefix.lower()
         try:
             # We add a space because a backslash can't be the last
             # char of a raw string literal
-            comp_what = eval(str_prefix
-                             + text
-                             + ' '
-                             + str_char)[:-1]
+            comp_what = eval(str_prefix + text + " " + str_char)[:-1]
         except SyntaxError:
             return
-        if comp_what == '':
-            comp_what = '.'
-        if comp_what.startswith('//'):
+        if comp_what == "":
+            comp_what = "."
+        if comp_what.startswith("//"):
             # This may be an XPath expression. Calling listdir on win32 will
             # interpret this as UNC and search the network, which may take
             # a long time or even stall. You can still use r'\\...' if you
@@ -772,7 +799,7 @@ class Subprocess(object):
                     # We need a unicode string as the code. From what I see,
                     # Python evaluates unicode characters in byte strings as utf-8.
                     try:
-                        name = name.decode('utf8')
+                        name = name.decode("utf8")
                     except UnicodeDecodeError:
                         continue
             # skip troublesome names
@@ -789,39 +816,42 @@ class Subprocess(object):
                 if add_quote:
                     name += str_char
             else:
-                if '/' in text or os.path.sep == '/':
+                if "/" in text or os.path.sep == "/":
                     # Prefer forward slash
-                    name += '/'
+                    name += "/"
                 else:
                     if not is_raw:
-                        name += '\\\\'
+                        name += "\\\\"
                     else:
-                        name += '\\'
+                        name += "\\"
 
-            if name.startswith('.'):
+            if name.startswith("."):
                 private.append(name)
             else:
                 public.append(name)
-        
+
         return public, private, case_insen_filenames
-    
+
     @staticmethod
     def get_welcome():
-        if 'IronPython' in sys.version:
-            first_line = sys.version[sys.version.find('(')+1:sys.version.rfind(')')]
+        if "IronPython" in sys.version:
+            first_line = sys.version[sys.version.find("(") + 1 : sys.version.rfind(")")]
         else:
-            if sys.platform.startswith('java'):
-                name = 'Jython'
+            if sys.platform.startswith("java"):
+                name = "Jython"
             else:
-                name = 'Python'
-            first_line = u'%s %s on %s' % (name, sys.version, sys.platform)
-        return (first_line+'\n'
-                +u'Type "copyright", "credits" or "license()" for more information.\n')
+                name = "Python"
+            first_line = "%s %s on %s" % (name, sys.version, sys.platform)
+        return (
+            first_line
+            + "\n"
+            + 'Type "copyright", "credits" or "license()" for more information.\n'
+        )
 
     @rpc_func
     def get_subprocess_info(self):
         return (self.get_welcome(), can_mask_sigint())
-        
+
     @classmethod
     def _find_constructor(cls, class_ob):
         # Given a class object, return a function object used for the
@@ -831,7 +861,8 @@ class Subprocess(object):
         except AttributeError:
             for base in class_ob.__bases__:
                 rc = cls._find_constructor(base)
-                if rc is not None: return rc
+                if rc is not None:
+                    return rc
         return None
 
     @rpc_func
@@ -841,15 +872,14 @@ class Subprocess(object):
             obj = eval(expr, self.locs)
         except Exception:
             return None
-        if isinstance(obj, (types.BuiltinFunctionType,
-                            types.BuiltinMethodType)):
+        if isinstance(obj, (types.BuiltinFunctionType, types.BuiltinMethodType)):
             # These don't have source code, and using pydoc will only
             # add something like "execfile(...)" before the doc.
             doc = inspect.getdoc(obj)
             if doc is None:
                 return None
             return unicodify(doc)
-        
+
         # for decorated functions: try to get the original function from
         # func.__module__ and func.__name__
         try:
@@ -866,18 +896,18 @@ class Subprocess(object):
                     obj = getattr(mod, obj.__name__)
                 except AttributeError:
                     pass
-        
+
         # Check if obj.__doc__ is not in the code (was added after definition).
         # If so, return pydoc's documentation.
         # This test is CPython-specific. Another approach would be to look for
         # the string in the source code.
-        co_consts = getattr(getattr(obj, 'func_code', None), 'co_consts', None)
-        __doc__ = getattr(obj, '__doc__', None)
+        co_consts = getattr(getattr(obj, "func_code", None), "co_consts", None)
+        __doc__ = getattr(obj, "__doc__", None)
         if co_consts is not None and __doc__ is not None:
             if __doc__ not in co_consts:
                 # Return pydoc's documentation
                 return unicodify(textdoc.document(obj).strip())
-        
+
         try:
             source = inspect.getsource(obj)
         except (TypeError, IOError):
@@ -885,13 +915,13 @@ class Subprocess(object):
             return unicodify(textdoc.document(obj).strip())
         else:
             # If we can get the source, return it.
-            
+
             # cleandoc removes extra indentation.
             # We add a newline because it ignores indentation of first line...
             # The next line is for Python 2.5 compatibility.
-            cleandoc = getattr(inspect, 'cleandoc', lambda s: s)
-            return unicodify(cleandoc('\n'+source))
-    
+            cleandoc = getattr(inspect, "cleandoc", lambda s: s)
+            return unicodify(cleandoc("\n" + source))
+
     @rpc_func
     def is_callable_only(self, what):
         """
@@ -907,38 +937,37 @@ class Subprocess(object):
         except Exception:
             return False, False
         typ = type(obj)
-        
-        expects_str = bool(getattr(obj, '__expects_str__', False))
-        
+
+        expects_str = bool(getattr(obj, "__expects_str__", False))
+
         # Check cache
         try:
             return is_callable_cache[id(typ)], expects_str
         except KeyError:
             pass
-        
-        r = (callable(obj)
-             and not any(hasattr(obj, att) for att in operator_methods))
-        
+
+        r = callable(obj) and not any(hasattr(obj, att) for att in operator_methods)
+
         is_callable_cache[id(typ)] = r
         return r, expects_str
-    
+
     def check_matplotlib_ia(self):
         """Check if matplotlib is in non-interactive mode, and handle it."""
         if not self.is_matplotlib_ia_warn and not self.is_matplotlib_ia_switch:
             return
         if self.matplotlib_ia_handled:
             return
-        if 'matplotlib' not in sys.modules:
+        if "matplotlib" not in sys.modules:
             return
         self.matplotlib_ia_handled = True
         # From here we do this only once.
-        matplotlib = sys.modules['matplotlib']
-        if not hasattr(matplotlib, 'is_interactive'):
+        matplotlib = sys.modules["matplotlib"]
+        if not hasattr(matplotlib, "is_interactive"):
             return
         if matplotlib.is_interactive():
             return
         if self.is_matplotlib_ia_switch:
-            if not hasattr(matplotlib, 'interactive'):
+            if not hasattr(matplotlib, "interactive"):
                 return
             matplotlib.interactive(True)
         else:
@@ -946,10 +975,12 @@ class Subprocess(object):
                 "Warning: matplotlib in non-interactive mode detected.\n"
                 "This means that plots will appear only after you run show().\n"
                 "Use Edit->Preferences->Shell to automatically switch to interactive mode \n"
-                "or to suppress this warning.\n")
+                "or to suppress this warning.\n"
+            )
 
 
 # Handle GUI events
+
 
 class GuiHandler(object):
     def handle_events(self, delay):
@@ -961,6 +992,7 @@ class GuiHandler(object):
         """
         raise NotImplementedError("Abstract method")
 
+
 @contextmanager
 def user_code():
     """
@@ -969,10 +1001,11 @@ def user_code():
     try:
         unmask_sigint()
         yield
-    except:
+    except Exception:
         sys.excepthook(*sys.exc_info())
     finally:
         mask_sigint()
+
 
 class GtkHandler(GuiHandler):
     def __init__(self):
@@ -981,8 +1014,8 @@ class GtkHandler(GuiHandler):
 
     def handle_events(self, delay):
         if self.gtk is None:
-            if 'gtk' in sys.modules:
-                self.gtk = sys.modules['gtk']
+            if "gtk" in sys.modules:
+                self.gtk = sys.modules["gtk"]
                 try:
                     from glib import timeout_add
                 except ImportError:
@@ -993,13 +1026,14 @@ class GtkHandler(GuiHandler):
         self.timeout_add(int(delay * 1000), self.gtk_main_quit)
         with user_code():
             self.gtk.main()
-            
+
         return True
 
     def gtk_main_quit(self):
         self.gtk.main_quit()
         # Don't call me again
         return False
+
 
 class GIHandler(GuiHandler):
     def __init__(self):
@@ -1008,9 +1042,10 @@ class GIHandler(GuiHandler):
 
     def handle_events(self, delay):
         if self.gobject is None:
-            if  'gi.repository.GObject' in sys.modules:
-                self.gobject = sys.modules[ 'gi.repository.GObject']
+            if "gi.repository.GObject" in sys.modules:
+                self.gobject = sys.modules["gi.repository.GObject"]
                 from gi.repository.GLib import timeout_add
+
                 self.timeout_add = timeout_add
             else:
                 return False
@@ -1018,7 +1053,7 @@ class GIHandler(GuiHandler):
         self.timeout_add(int(delay * 1000), mainloop.quit)
         with user_code():
             mainloop.run()
-            
+
         return True
 
     def gtk_main_quit(self):
@@ -1026,18 +1061,19 @@ class GIHandler(GuiHandler):
         # Don't call me again
         return False
 
+
 class Qt4Handler(GuiHandler):
     def __init__(self):
         self.QtCore = None
 
     def handle_events(self, delay):
         if self.QtCore is None:
-            if 'PyQt4' in sys.modules:
-                self.QtCore = sys.modules['PyQt4'].QtCore
-            elif 'PyQt5' in sys.modules:
-                self.QtCore = sys.modules['PyQt5'].QtCore
-            elif 'PySide' in sys.modules:
-                self.QtCore = sys.modules['PySide'].QtCore
+            if "PyQt4" in sys.modules:
+                self.QtCore = sys.modules["PyQt4"].QtCore
+            elif "PyQt5" in sys.modules:
+                self.QtCore = sys.modules["PyQt5"].QtCore
+            elif "PySide" in sys.modules:
+                self.QtCore = sys.modules["PySide"].QtCore
             else:
                 return False
         QtCore = self.QtCore
@@ -1049,14 +1085,15 @@ class Qt4Handler(GuiHandler):
         # We create a new QCoreApplication to avoid quitting if modal dialogs
         # are active. This approach was taken from IPython. See:
         # https://github.com/ipython/ipython/blob/master/IPython/lib/inputhookqt4.py
-        app.processEvents(QtCore.QEventLoop.AllEvents, int(delay*1000))
+        app.processEvents(QtCore.QEventLoop.AllEvents, int(delay * 1000))
         timer = QtCore.QTimer()
         event_loop = QtCore.QEventLoop()
         timer.timeout.connect(event_loop.quit)
-        timer.start(int(delay*1000))
+        timer.start(int(delay * 1000))
         event_loop.exec_()
-        timer.stop()        
+        timer.stop()
         return True
+
 
 class TkHandler(GuiHandler):
     def __init__(self):
@@ -1066,10 +1103,10 @@ class TkHandler(GuiHandler):
         # TODO: It's pretty silly to handle all events and then just wait.
         # But I haven't found a better way - if you find one, tell me!
         if self.Tkinter is None:
-            if 'Tkinter' in sys.modules:
-                self.Tkinter = sys.modules['Tkinter']
-            if 'tkinter' in sys.modules:
-                self.Tkinter = sys.modules['tkinter']
+            if "Tkinter" in sys.modules:
+                self.Tkinter = sys.modules["Tkinter"]
+            if "tkinter" in sys.modules:
+                self.Tkinter = sys.modules["tkinter"]
             else:
                 return False
         Tkinter = self.Tkinter
@@ -1082,7 +1119,7 @@ class TkHandler(GuiHandler):
         if Tkinter._default_root:
             _tkinter = Tkinter._tkinter
             with user_code():
-                if hasattr(_tkinter, 'dooneevent'):
+                if hasattr(_tkinter, "dooneevent"):
                     while _tkinter.dooneevent(_tkinter.DONT_WAIT):
                         pass
                 else:
@@ -1091,5 +1128,7 @@ class TkHandler(GuiHandler):
         time.sleep(delay)
         return True
 
+
 def main(port):
     _subp = Subprocess(port)
+    _subp.run()
