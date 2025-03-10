@@ -35,21 +35,21 @@ def find_data_dir():
     Find the data directory in which to find files.
     If we are inside the source directory, build subp zips.
     """
-    # The data directory is normally located at dreampielib/data.
+    # The data directory is normally located at dreampie/data.
     # When running under py2exe, it is in the same directory as the executable.
     # Running inside the source directory is detected by the presence of a
-    # file called 'dreampie' in the same directory as 'dreampielib'.
+    # file called 'dreampie' in the same directory as 'dreampie'.
     from os.path import join, dirname, abspath, isfile
 
     if hasattr(sys, 'frozen'):
         return abspath(join(dirname(sys.executable), 'data'))
-    dreampielib_dir = dirname(dirname(abspath(__file__)))
-    if isfile(join(dirname(dreampielib_dir), 'dreampie')):
+    dreampie_dir = dirname(dirname(abspath(__file__)))
+    if isfile(join(dirname(dreampie_dir), 'dreampie')):
         # We're in the source path. Build zips if needed, and return the right
         # dir.
         from ..subp_lib import build
         build()
-    return join(dreampielib_dir, 'data')
+    return join(dreampie_dir, 'data')
 
 data_dir = find_data_dir()
 gladefile = path.join(data_dir, 'dreampie.glade')
@@ -151,11 +151,11 @@ class DreamPie(SimpleGladeApp):
         self.config = Config()
         
         if self.config.get_bool('start-rpdb2-embedded'):
-            print 'Starting rpdb2 embedded debugger...',
+            print('Starting rpdb2 embedded debugger...', end='')
             sys.stdout.flush()
-            import rpdb2; rpdb2.start_embedded_debugger('1234', timeout=0.1)
-            print 'Done.'
-
+            import rpdb2
+            rpdb2.start_embedded_debugger('1234', timeout=0.1)
+            print('Done.')
         self.window_main.set_icon_from_file(
             path.join(data_dir, 'dreampie.png'))
 
@@ -243,7 +243,7 @@ class DreamPie(SimpleGladeApp):
         self._n_unclaimed_results = 0
         try:
             self.subp.start()
-        except StartError, e:
+        except StartError as e:
             msg = gtk.MessageDialog(
                 None, gtk.DIALOG_MODAL, gtk.MESSAGE_ERROR, gtk.BUTTONS_CLOSE,
                 _("Couldn't start subprocess: %s") % e)

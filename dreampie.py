@@ -1,4 +1,4 @@
 #!/usr/bin/env python
 
-from dreampielib.gui import main
+from dreampie.gui import main
 main()

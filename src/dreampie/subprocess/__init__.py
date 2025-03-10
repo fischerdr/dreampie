@@ -22,7 +22,10 @@ import os
 import time
 import socket
 from select import select
-from StringIO import StringIO
+if py3k:
+    from io import StringIO
+else:
+    from StringIO import StringIO
 import linecache
 import traceback
 import types
@@ -89,9 +92,22 @@ _features = [getattr(__future__, fname)
 
 case_insen_filenames = (os.path.normcase('A') == 'a')
 
+# Fault-tolerant conversion to unicode
 def unicodify(s):
-    """Fault-tolerant conversion to unicode"""
-    return s if isinstance(s, unicode) else s.decode('utf8', 'replace')
+    if py3k:
+        if isinstance(s, bytes):
+            try:
+                return s.decode('utf-8')
+            except UnicodeDecodeError:
+                return str(s)
+        return str(s)
+    else:
+        if isinstance(s, str):
+            try:
+                return s.decode('utf-8')
+            except UnicodeDecodeError:
+                return unicode(s)
+        return unicode(s)
 
 class PlainTextDoc(pydoc.TextDoc):
     """pydoc.TextDoc returns strange bold text, so we disable it."""
@@ -314,12 +330,12 @@ class Subprocess(object):
                         ast.PyCF_ONLY_AST | self.flags)
             b = ast.Interactive(a.body)
             codeob = compile(b, filename, 'single', self.flags)
-        except SyntaxError, e:
+        except SyntaxError as e:
             # Sometimes lineno or offset are not defined. Zero them in that case.
             lineno = e.lineno if e.lineno is not None else 1
             offset = e.offset if e.offset is not None else 1
             return False, (unicode(e.msg), lineno-1, offset-1)
-        except ValueError, e:
+        except ValueError as e:
             # Compiling "\x%" raises a ValueError
             return False, (unicode(e), 0, 0)
             
@@ -346,20 +362,19 @@ class Subprocess(object):
         for src in split_source:
             try:
                 c = compile(src, '<pyshell>', 'single', cur_flags)
-            except SyntaxError, e:
+            except SyntaxError as e:
                 # Sometimes lineno or offset are not defined. Zero them in that
                 # case.
                 lineno = e.lineno if e.lineno is not None else 1
                 offset = e.offset if e.offset is not None else 1
                 msg = unicodify(e.msg)
                 return False, (msg, lineno-1+line_count, offset-1)
-            except ValueError, e:
+            except ValueError as e:
                 # Compiling "\x%" raises a ValueError
                 return False, (unicode(e), 0, 0)
             else:
                 if c is None:
                     return False, None
-                    return
                 else:
                     line_count += src.count('\n')
                     cur_flags = self.update_features(cur_flags, c.co_flags)
@@ -949,7 +964,6 @@ def user_code():
         sys.excepthook(*sys.exc_info())
     finally:
         mask_sigint()
-
 
 class GtkHandler(GuiHandler):
     def __init__(self):

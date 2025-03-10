@@ -12,12 +12,14 @@ import time
 
 from dreampielib.common.objectstream import send_object, recv_object
 
+
 def debug(s):
-    print >> sys.stderr, s
+    print(s, file=sys.stderr)
+
 
 def main():
     if len(sys.argv) < 2 or sys.argv[1] in ('-h', '--help'):
-        print >> sys.stderr, "Usage: %s executable" % sys.argv[0]
+        print("Usage: %s executable" % sys.argv[0], file=sys.stderr)
         sys.exit(1)
     executable = sys.argv[1:]
     
@@ -43,7 +45,7 @@ def main():
     env = os.environ.copy()
     env['PYTHONUNBUFFERED'] = '1'
     popen = Popen(executable + [str(port)],
-                  stdin=PIPE, stdout=PIPE, #stderr=PIPE,
+                  stdin=PIPE, stdout=PIPE,  # stderr=PIPE,
                   close_fds=True, env=env)
     debug("Waiting for an answer")
     s.listen(1)
@@ -58,11 +60,11 @@ def main():
         # Check if exited
         rc = popen.poll()
         if rc is not None:
-            print 'Process terminated with rc %r' % rc
+            print('Process terminated with rc %r' % rc, file=sys.stderr)
             break
 
         # Read from stdout, stderr, and socket
-        #ready, _, _ = select([sys.stdin, popen.stdout, popen.stderr, sock], [], [], 0)
+        # ready, _, _ = select([sys.stdin, popen.stdout, popen.stderr, sock], [], [], 0)
         ready, _, _ = select([sys.stdin, popen.stdout, sock], [], [], 0)
 
         if sys.stdin in ready:
@@ -79,7 +81,7 @@ def main():
                 if not select([popen.stdout], [], [], 0)[0]:
                     break
             r = ''.join(r)
-            print 'stdout: %r' % r
+            print('stdout: %r' % r)
                 
         if popen.stderr in ready:
             r = []
@@ -88,11 +90,16 @@ def main():
                 if not select([popen.stderr], [], [], 0)[0]:
                     break
             r = ''.join(r)
-            print 'stderr: %r' % r
+            print('stderr: %r' % r)
         
         if sock in ready:
             obj = recv_object(sock)
-            print 'obj: %r' % (obj,)
+            print('obj: %r' % (obj,))
+
+    popen.wait()
+    sock.close()
+    sys.exit(0)
+
 
 if __name__ == '__main__':
     main()
